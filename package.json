@@ -1,0 +1,16 @@
+{
+  "name": "sonisik",
+  "version": "1.0.0",
+  "description": "SON ISIK - 3D FPS Korku",
+  "type": "module",
+  "scripts": {
+    "build": "echo \"no build\""
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/cli": "^6.1.0"
+  }
+}

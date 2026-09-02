@@ -1,0 +1,80 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install deps
+        run: npm install
+
+      - name: Prepare web assets
+        run: |
+          mkdir -p www
+          cp index.html www/ 2>/dev/null || true
+          cp -r assets www/ 2>/dev/null || true
+          cp manifest.json www/ 2>/dev/null || true
+          # fallback: if no www needed, use root
+          echo "www prepared:"
+          ls -R www | head -n 40
+
+      - name: Capacitor add android
+        run: |
+          npx cap add android || true
+          npx cap sync android || npx cap sync
+
+      - name: Patch AndroidManifest & file_paths
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          if [ -f "$MANIFEST" ]; then
+            echo "Patching manifest for cleartext + orientation"
+            # allow http for local assets if needed
+            sed -i 's/<application/<application android:usesCleartextTraffic="true"/' "$MANIFEST" || true
+          fi
+          mkdir -p android/app/src/main/res/xml
+          cat > android/app/src/main/res/xml/file_paths.xml << 'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <paths><external-path name="external" path="." /><files-path name="files" path="." /></paths>
+          XML
+          cat android/app/src/main/res/xml/file_paths.xml
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SONISIK-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+          generate_release_notes: true
