@@ -74,6 +74,13 @@ canvas{display:block}
 #settingsBox{background:#14141c;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:22px 20px;min-width:320px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.5)}
 #settingsBox h3{margin-bottom:14px;letter-spacing:.08em}
 .settingRow{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.06);padding:10px 12px;border-radius:12px;margin-bottom:10px}
+.settings-sep{border:0;height:1px;background:rgba(255,255,255,.08);margin:12px 0}
+.aboutBox{text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;margin-bottom:12px}
+.aboutBox h4{font-size:13px;margin-bottom:6px}
+.aboutBox p{font-size:12px;opacity:.78;line-height:1.5;margin:4px 0}
+.aboutMeta{font-size:11px !important;opacity:.5 !important}
+.githubLink{display:block;margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;color:#fff;text-decoration:none;font-weight:800;font-size:12px}
+.githubLink:hover{background:rgba(255,255,255,.12)}
 .toggle{display:flex;gap:6px}
 .toggle button{padding:7px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;font-weight:700;font-size:12px}
 .toggle button.active{background:#fff;color:#000}
