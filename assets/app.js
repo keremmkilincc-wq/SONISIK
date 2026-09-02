@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 const overlay = document.getElementById('overlay');
 const gameOverEl = document.getElementById('gameOver');
@@ -243,18 +244,36 @@ creature.position.set(6,0,-6); scene.add(creature);
 // placeholder kutu silinecek, joker gelince gizle
 const placeholder = new THREE.Mesh(new THREE.BoxGeometry(0.7,1.2,0.45), new THREE.MeshStandardMaterial({color:0x050507})); placeholder.position.y=1.0; creature.add(placeholder);
 const phHead=new THREE.Mesh(new THREE.SphereGeometry(0.33,12,10), new THREE.MeshStandardMaterial({color:0x111111})); phHead.position.set(0,1.82,0.08); creature.add(phHead);
-mtlLoader.load('assets/models/joker.mtl', (mtl)=>{
-  mtl.preload();
-  objLoader.setMaterials(mtl);
-  objLoader.load('assets/models/joker.obj', (obj)=>{
-    obj.scale.set(0.75,0.75,0.75);
-    obj.position.set(0,0,0);
-    obj.rotation.y=Math.PI;
-    obj.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; }});
-    creature.remove(placeholder); creature.remove(phHead);
-    creature.add(obj); jokerMesh=obj;
-    // joker gezince sallansin
-    jokerMesh.userData.baseY=0;
+let mixer=null, jokerMixer=null;
+const fbxLoader=new FBXLoader();
+// FBX dene (animasyonlu), olmazsa OBJ fallback
+fbxLoader.load('assets/models/joker.fbx', (fbx)=>{
+  fbx.scale.set(0.009,0.009,0.009);
+  fbx.position.set(0,-0.05,0);
+  // FBX genelde -90 derece yatik gelir, duzelt
+  fbx.rotation.y=Math.PI;
+  fbx.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; }});
+  creature.remove(placeholder); creature.remove(phHead);
+  creature.add(fbx); jokerMesh=fbx;
+  if(fbx.animations && fbx.animations.length>0){
+    jokerMixer=new THREE.AnimationMixer(fbx);
+    const act=jokerMixer.clipAction(fbx.animations[0]); act.play();
+  }
+  loadingEl.textContent='Joker (FBX) yüklendi';
+  setTimeout(()=> loadingEl.classList.add('hidden'),400);
+}, undefined, ()=>{
+  // fallback OBJ
+  mtlLoader.load('assets/models/joker.mtl', (mtl)=>{
+    mtl.preload();
+    objLoader.setMaterials(mtl);
+    objLoader.load('assets/models/joker.obj', (obj)=>{
+      obj.scale.set(0.75,0.75,0.75);
+      obj.position.set(0,0,0);
+      obj.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; }});
+      creature.remove(placeholder); creature.remove(phHead);
+      creature.add(obj); jokerMesh=obj;
+      jokerMesh.userData.baseY=0;
+    });
   });
 });
 let creatureState='patrol'; let patrolTarget=new THREE.Vector3((Math.random()-0.5)*50,0,(Math.random()-0.5)*50); let fleeUntil=0;
@@ -358,10 +377,20 @@ function updateCreature(dt, now){
   else { target=patrolTarget; speed=1.85; if(cPos.distanceTo(patrolTarget)<1.0) patrolTarget.set((Math.random()-0.5)*52,0,(Math.random()-0.5)*52); }
   if(target){
     const moved=tryMoveEntity(cPos, target, speed, dt);
-    if(moved) creature.lookAt(target.x, cPos.y, target.z);
+    if(moved){
+      const ang=Math.atan2(target.x - cPos.x, target.z - cPos.z);
+      // duzelt: model -Z bakiyor, o yuzden PI ekle
+      creature.rotation.y = ang + Math.PI;
+    }
   }
-  if(jokerMesh) jokerMesh.position.y = Math.sin(now*0.006)*(creatureState==='chase'?0.08:0.02);
-  else cLight.position.y=1.1 + Math.sin(now*0.006)*(creatureState==='chase'?0.11:0.04);
+  // yurume animasyonu
+  if(jokerMixer) jokerMixer.update(dt);
+  if(jokerMesh){
+    const walkSpeed = creatureState==='chase'? 0.014 : 0.007;
+    jokerMesh.rotation.z = Math.sin(now*walkSpeed*1.2)*0.12;
+    jokerMesh.rotation.x = Math.sin(now*walkSpeed)*0.06;
+    jokerMesh.position.y = Math.abs(Math.sin(now*walkSpeed*2))*0.18;
+  } else cLight.position.y=1.1 + Math.sin(now*0.006)*(creatureState==='chase'?0.11:0.04);
   if(dist<6 && creatureState==='chase' && Math.random()<0.04) cLight.intensity=Math.random()*4+1;
   const hDistCre = Math.hypot(cPos.x - playerPos.x, cPos.z - playerPos.z);
   if(hDistCre<1.15 && !gameEnded) endGame(false);
@@ -379,8 +408,10 @@ function updatePet(dt, now){
   if(petState==='flee'){ const away=new THREE.Vector3().subVectors(pPos, playerPos).normalize().multiplyScalar(6); target=new THREE.Vector3().addVectors(pPos, away); speed=4.2; }
   else if(petState==='chase'){ target=playerPos.clone(); speed=4.0; }
   else { target=new THREE.Vector3().copy(patrolTarget); speed=1.4; if(pPos.distanceTo(patrolTarget)<1.2) patrolTarget.set((Math.random()-0.5)*46,0,(Math.random()-0.5)*46); }
-  if(target){ const moved=tryMoveEntity(pPos, target, speed, dt); if(moved) pet.lookAt(target.x, pPos.y, target.z); }
-  pBody.position.y=0.62 + Math.sin(now*0.008)*(petState==='chase'?0.09:0.03);
+  if(target){ const moved=tryMoveEntity(pPos, target, speed, dt); if(moved){ const ang=Math.atan2(target.x - pPos.x, target.z - pPos.z); pet.rotation.y = ang + Math.PI; } }
+  // pet yurume
+  pBody.rotation.z = Math.sin(now*0.016)*0.18;
+  pBody.position.y=0.62 + Math.abs(Math.sin(now*0.016))*0.12;
   const hDistPet = Math.hypot(pPos.x - playerPos.x, pPos.z - playerPos.z);
   if(hDistPet<0.95 && !gameEnded) endGame(false);
 }
