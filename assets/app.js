@@ -108,9 +108,8 @@ function spawnBattery(x,z){
 // 15 pil - buyuk harita daginik zor yerler
 [ [-26,-27],[26,-26],[-27,26],[27,27],[0,-22],[-18,12],[19,-8],[ -8,18],[8,22],[-22,-8],[22,8],[-25,0],[25,-2],[0,26],[-12,-25] ].forEach(([x,z])=> spawnBattery(x,z));
 
-// Creature - FIX 1: daha gorunur + yakin spawn
+// Creature - ana canavar
 const creature=new THREE.Group();
-// use Box instead of Capsule for compat
 const cBody=new THREE.Mesh(new THREE.BoxGeometry(0.7,1.2,0.45), new THREE.MeshStandardMaterial({color:0x050507, roughness:1}));
 cBody.position.y=1.0;
 const cHead=new THREE.Mesh(new THREE.SphereGeometry(0.33,16,12), new THREE.MeshStandardMaterial({color:0x0a0a0a, roughness:0.9}));
@@ -120,11 +119,28 @@ const eye1=new THREE.Mesh(new THREE.SphereGeometry(0.07,10,8), eyeMat); eye1.pos
 const eye2=eye1.clone(); eye2.position.x=0.13;
 const cLight=new THREE.PointLight(0xff0000, 3.5, 7); cLight.position.set(0,1.1,0);
 creature.add(cBody,cHead,eye1,eye2,cLight);
-creature.position.set(4,0, -4); // FIX: yakin baslasin, hemen gorunsun
+creature.position.set(4,0, -4);
 scene.add(creature);
 let creatureState='patrol';
 let patrolTarget=new THREE.Vector3((Math.random()-0.5)*34,0,(Math.random()-0.5)*34);
 let fleeUntil=0;
+
+// Pet - kucuk evcil, kapinin onu spawn, 10 pilden sonra aktif
+const pet=new THREE.Group();
+const pBody=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.65,0.35), new THREE.MeshStandardMaterial({color:0x1a0a0a, roughness:1}));
+pBody.position.y=0.62;
+const pHead=new THREE.Mesh(new THREE.SphereGeometry(0.23,12,10), new THREE.MeshStandardMaterial({color:0x1a0a0a}));
+pHead.position.set(0,1.05,0.05);
+const pEyeMat=new THREE.MeshStandardMaterial({color:0xffaa00, emissive:0xff6a00, emissiveIntensity:3});
+const pEye1=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,8), pEyeMat); pEye1.position.set(-0.09,1.07,0.18);
+const pEye2=pEye1.clone(); pEye2.position.x=0.09;
+const pLight=new THREE.PointLight(0xff6a00, 2.8, 6); pLight.position.set(0,0.7,0);
+pet.add(pBody,pHead,pEye1,pEye2,pLight);
+pet.position.set(0,0,-26); // kapinin onu
+pet.visible=false;
+scene.add(pet);
+let petState='sleep'; // sleep, chase, flee
+let petFleeUntil=0;
 
 let battery=100;
 let flashOn=true;
@@ -199,9 +215,9 @@ function updateCreature(dt, now){
     const away=new THREE.Vector3().subVectors(cPos, playerPos).normalize().multiplyScalar(7);
     target=new THREE.Vector3().addVectors(cPos, away); speed=3.6;
   } else if(creatureState==='chase'){
-    target=playerPos.clone(); speed=3.0 + collected*0.18 + (battery<30?0.9:0);
+    target=playerPos.clone(); speed=3.4 + collected*0.22 + (battery<30?1.0:0);
   } else {
-    target=patrolTarget; speed=1.55;
+    target=patrolTarget; speed=1.75;
     if(cPos.distanceTo(patrolTarget)<1.0) patrolTarget.set((Math.random()-0.5)*34,0,(Math.random()-0.5)*34);
   }
   if(target){
@@ -213,6 +229,39 @@ function updateCreature(dt, now){
   // light flicker when close
   if(dist<6 && creatureState==='chase' && Math.random()<0.04) cLight.intensity=Math.random()*4+1;
   if(dist<1.35 && !gameEnded) endGame(false);
+}
+function updatePet(dt, now){
+  if(collected<10){
+    if(pet.visible) pet.visible=false;
+    petState='sleep';
+    // uyurken hafif nefes
+    pBody.position.y=0.62 + Math.sin(now*0.002)*0.04;
+    return;
+  }
+  if(!pet.visible){ pet.visible=true; petFleeUntil=now+400; } // uyanma animasyonu
+  const playerPos=controls.getObject().position;
+  const pPos=pet.position;
+  const dist=pPos.distanceTo(playerPos);
+  let inLight=false;
+  if(flashOn && dist<9){
+    const dir=new THREE.Vector3(); camera.getWorldDirection(dir);
+    const toP=new THREE.Vector3().subVectors(pPos, camera.position).normalize();
+    if(dir.dot(toP)>0.78) inLight=true;
+  }
+  if(inLight){ petState='flee'; petFleeUntil=now+700; }
+  else if(now>petFleeUntil){
+    const moving=keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD'];
+    if(dist<15 && (moving || !flashOn)) petState='chase'; else petState='patrol';
+  } else petState='flee';
+
+  let speed, target;
+  if(petState==='flee'){ const away=new THREE.Vector3().subVectors(pPos, playerPos).normalize().multiplyScalar(6); target=new THREE.Vector3().addVectors(pPos, away); speed=4.0; }
+  else if(petState==='chase'){ target=playerPos.clone(); speed=3.8; } // pet daha hizli kucuk
+  else { target=new THREE.Vector3().copy(patrolTarget); speed=1.2; if(pPos.distanceTo(patrolTarget)<1.2) patrolTarget.set((Math.random()-0.5)*30,0,(Math.random()-0.5)*30); }
+
+  if(target){ const dir=new THREE.Vector3().subVectors(target,pPos); dir.y=0; const len=dir.length(); if(len>0.01){ dir.normalize().multiplyScalar(speed*dt); pPos.add(dir); if(len>0.05) pet.lookAt(target.x, pPos.y, target.z); } }
+  pBody.position.y=0.62 + Math.sin(now*0.008)*(petState==='chase'?0.09:0.03);
+  if(dist<1.1 && !gameEnded) endGame(false);
 }
 function checkWin(){
   if(collected>=15 && controls.getObject().position.distanceTo(doorFrame.position)<2.6) endGame(true);
@@ -232,9 +281,9 @@ function animate(now){
   const dt=Math.min(0.05,(now-last)/1000); last=now;
   if(controls.isLocked && !gameEnded){
     move(dt);
-    // baya hizli bitis
-    if(flashOn && now-lastDrain>100){
-      battery=Math.max(0,battery-0.22);
+    // cok hizli bitis
+    if(flashOn && now-lastDrain>85){
+      battery=Math.max(0,battery-0.38);
       batteryVal.textContent=battery.toFixed(0);
       if(battery<=0){ flashlight.intensity=0; flashOn=false; playerFill.intensity=0.12; }
       lastDrain=now;
@@ -242,6 +291,7 @@ function animate(now){
     }
     updatePickups(dt);
     updateCreature(dt, now);
+    updatePet(dt, now);
     checkWin();
   } else {
     pickups.forEach(g=>{ if(!g.userData.collected) g.rotation.y+=0.006; });
