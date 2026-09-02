@@ -77,3 +77,6 @@ canvas{display:block}
 @keyframes eyes{0%, 88%, 100%{opacity:.35} 90%{opacity:.05} 92%{opacity:.4}}
 @keyframes goIn{0%{opacity:0;transform:translateY(14px) scale(.98)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes iconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#spiderAlert{position:fixed;top:42%;left:50%;transform:translate(-50%,-50%);z-index:15;background:rgba(20,0,0,0.88);border:2px solid #ff1a1a;color:#ff1a1a;padding:18px 28px;border-radius:14px;font-family:Creepster, cursive;font-size:38px;letter-spacing:.08em;text-shadow:0 0 12px rgba(255,0,0,0.7), 0 2px 0 #000;box-shadow:0 0 28px rgba(255,0,0,0.45);animation:spiderShake .14s infinite}
+#spiderAlert.hidden{display:none}
+@keyframes spiderShake{0%{transform:translate(-50%,-50%) translate(1px,1px) rotate(.4deg)}25%{transform:translate(-50%,-50%) translate(-1px,-1px) rotate(-.4deg)}50%{transform:translate(-50%,-50%) translate(-1px,1px) rotate(.3deg)}75%{transform:translate(-50%,-50%) translate(1px,-1px) rotate(-.3deg)}100%{transform:translate(-50%,-50%) translate(1px,1px) rotate(.4deg)}}

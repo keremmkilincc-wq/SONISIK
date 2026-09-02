@@ -18,6 +18,8 @@ const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
 const bgm = document.getElementById('bgm');
 const bgmOpening = document.getElementById('bgmOpening');
+const loseBgm = document.getElementById('loseBgm');
+const spiderAlert = document.getElementById('spiderAlert');
 const muteBtn = document.getElementById('muteBtn');
 const loadingEl = document.getElementById('loading');
 const settingsBtn = document.getElementById('settingsBtn');
@@ -55,7 +57,7 @@ overlay.addEventListener('click', e=>{ if(e.target===overlay) tryLock(); });
 restartBtn.onclick = () => location.reload();
 muteBtn.onclick = async ()=>{
   const openingActive = overlay.style.display!=='none' && !controls.isLocked;
-  bgm.muted=!bgm.muted; bgmOpening.muted=bgm.muted;
+  bgm.muted=!bgm.muted; bgmOpening.muted=bgm.muted; loseBgm.muted=bgm.muted;
   muteBtn.textContent=bgm.muted?'🔇':'🔊'; muteBtn.classList.toggle('muted', bgm.muted);
   if(!openingActive && !musicStarted && !bgm.muted) await startMusic();
   if(openingActive && !openingStarted && !bgmOpening.muted) await startOpening();
@@ -534,7 +536,7 @@ function updateCreature(dt, now){
 }
 function updatePet(dt, now){
   if(collected<10){ if(pet.visible) pet.visible=false; petState='sleep'; if(spiderMesh) spiderMesh.position.y=0.35 + Math.sin(now*0.002)*0.04; return; }
-  if(!pet.visible){ pet.visible=true; petFleeUntil=now+400; }
+  if(!pet.visible){ pet.visible=true; petFleeUntil=now+400; showSpiderAlert(); }
   const playerPos=controls.getObject().position, pPos=pet.position, dist=pPos.distanceTo(playerPos);
   let inLight=false;
   if(flashOn && dist<9){ const dir=new THREE.Vector3(); camera.getWorldDirection(dir); const toP=new THREE.Vector3().subVectors(pPos, camera.position).normalize(); if(dir.dot(toP)>0.78) inLight=true; }
@@ -559,9 +561,19 @@ function checkWin(){
   if(collected>=40 && controls.getObject().position.distanceTo(doorFrame.position)<2.8) endGame(true);
   else if(collected<40 && controls.getObject().position.distanceTo(doorFrame.position)<2.4){ doorFrame.material.emissiveIntensity=1.6; setTimeout(()=> doorFrame.material.emissiveIntensity=0.8,180); }
 }
+let spiderAlertShown=false;
+function showSpiderAlert(){
+  if(spiderAlertShown) return;
+  spiderAlertShown=true;
+  spiderAlert.classList.remove('hidden');
+  setTimeout(()=> spiderAlert.classList.add('hidden'), 5000);
+}
 function endGame(won){
   gameEnded=true; controls.unlock(); gameOverEl.classList.remove('hidden'); gameOverEl.classList.toggle('win', won); gameOverEl.classList.toggle('lose', !won);
   overlay.style.display='none'; bgm.pause(); bgmOpening.pause();
+  if(!won){
+    loseBgm.currentTime=0; loseBgm.volume=0.75; loseBgm.play().catch(()=>{});
+  }
   const goIcon=document.getElementById('goIcon'), goSub=document.getElementById('goSub'), goStat1=document.getElementById('goStat1'), goStat2=document.getElementById('goStat2');
   const elapsed = gameStartTime ? Math.floor((performance.now()-gameStartTime)/1000) : 0;
   const mins=String(Math.floor(elapsed/60)).padStart(2,'0'), secs=String(elapsed%60).padStart(2,'0');
