@@ -71,7 +71,7 @@ function setMode(light){
 }
 modeDark.onclick=()=> setMode(false);
 modeLight.onclick=()=> setMode(true);
-controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden'); stopOpening(); if(!musicStarted) startMusic(); });
+controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden'); stopOpening(); if(!musicStarted) startMusic(); if(!gameStartTime) gameStartTime=performance.now(); });
 controls.addEventListener('unlock', () => { if(!gameEnded && settingsPanel.classList.contains('hidden')){ overlay.style.display='flex'; bgm.pause(); startOpening(); } });
 document.addEventListener('click', ()=>{ if(overlay.style.display==='none' && !controls.isLocked && !gameEnded && settingsPanel.classList.contains('hidden')) tryLock(); });
 
@@ -225,7 +225,7 @@ function addColumn(x,z){
   col.position.set(x,2.5,z); col.castShadow=false; col.receiveShadow=false; scene.add(col);
   colliders.push({ minX:x-0.62, maxX:x+0.62, minZ:z-0.62, maxZ:z+0.62 });
 }
-for(let x=-40;x<=40;x+=10){ addColumn(x,-44.6); addColumn(x,44.6); }
+for(let x=-40;x<=40;x+=10){ if(x!==0) addColumn(x,-44.6); addColumn(x,44.6); }
 for(let z=-35;z<=35;z+=10){ addColumn(-44.6,z); addColumn(44.6,z); }
 // kose buyuk kolonlar
 [[-44.6,-44.6],[44.6,-44.6],[-44.6,44.6],[44.6,44.6]].forEach(([x,z])=>{
@@ -274,7 +274,7 @@ const crateBoxes=[];
 for(let i=0;i<22;i++){
   const sx=0.9+Math.random()*1.4, sy=1+Math.random()*1.6, sz=0.9+Math.random()*1.4;
   const mat = i%3===0 ? new THREE.MeshStandardMaterial({map:crateTex}) : (i%3===1? new THREE.MeshStandardMaterial({color:0x3a2518, roughness:0.9}) : wallMat);
-  let x,y,z; do{ x=(Math.random()-0.5)*74; z=(Math.random()-0.5)*74; } while( isRoomInside(x,z) );
+  let x,y,z; let tries=0; do{ x=(Math.random()-0.5)*74; z=(Math.random()-0.5)*74; tries++; if(tries>40) break; } while( isRoomInside(x,z) || isNearPickup(x,z) );
   const b=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), mat);
   b.position.set(x, sy/2, z);
   if(b.position.distanceTo(new THREE.Vector3(0,0,10))<6) b.position.z+=10;
@@ -286,10 +286,16 @@ function isRoomInside(x,z){
   for(const r of roomCenters){ if(Math.abs(x-r[0])<6.5 && Math.abs(z-r[1])<6.5) return true; }
   return false;
 }
+function isNearPickup(x,z){
+  const picks=[[-42,-42],[42,-42],[-42,42],[42,42],[0,-38],[-20,34],[22,36],[-36,-18],[36,-20],[-38,10],[38,12],[-10,-30],[10,-32],[-30,22],[30,24],[-18,-28],[18,-26],[-42,0],[42,2],[0,38],[-34,34],[34,-34],[-26,-10],[26,10],[-12,18],[12,20],[-36,28],[36,28],[-8,-42],[8,-42],[-14,40],[14,40],[-28,-32],[28,-32],[-6,30],[6,32],[-18,0],[18,0],[0,12],[0,-12]];
+  for(const p of picks){ if(Math.hypot(x-p[0], z-p[1])<3.2) return true; }
+  for(const t of tablePositions){ if(Math.hypot(x-t[0], z-t[1])<3.0) return true; }
+  return false;
+}
 // masa+sandalye engelleri (FBX)
 const fbxLoader=new FBXLoader();
 const tablePositions=[
-  [-12,-8],[12,-12],[-18,18],[18,16],[0,22],[-28,-22],[28,-24],[-8,30]
+  [-12,-8],[12,-12],[-18,18],[18,16],[6,6],[-28,-22],[28,-24],[-8,30]
 ];
 fbxLoader.load('assets/models/table.fbx', (fbx)=>{
   fbx.traverse(c=>{ if(c.isMesh){ c.castShadow=false; c.receiveShadow=false; }});
@@ -418,6 +424,7 @@ let petState='sleep'; let petFleeUntil=0;
 
 let battery=100, flashOn=true, collected=0, gameEnded=false;
 let stamina=100, canSprint=true;
+let gameStartTime=0;
 flashlight.intensity=55; let lastDrain=performance.now();
 const keys={};
 addEventListener('keydown', e=>{ keys[e.code]=true; if(e.code==='KeyF'){ flashOn=!flashOn; flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12; if(flashlightModel) flashlightModel.visible=flashOn; if(flashOn) lastDrain=performance.now(); }});
@@ -551,9 +558,25 @@ function checkWin(){
   else if(collected<40 && controls.getObject().position.distanceTo(doorFrame.position)<2.4){ doorFrame.material.emissiveIntensity=1.6; setTimeout(()=> doorFrame.material.emissiveIntensity=0.8,180); }
 }
 function endGame(won){
-  gameEnded=true; controls.unlock(); gameOverEl.classList.remove('hidden'); overlay.style.display='none'; bgm.pause(); bgmOpening.pause();
-  if(won){ goTitle.textContent='KAÇTIN! 🎉'; goTitle.style.color='#22c55e'; goDesc.textContent=`${collected}/40 pil ile kaçtın! Kalan pil ${battery.toFixed(0)}%`; }
-  else { goTitle.textContent='YAKALANDIN ☠️'; goTitle.style.color='#ef4444'; goDesc.textContent='Feneri ve staminayı idareli kullan!'; }
+  gameEnded=true; controls.unlock(); gameOverEl.classList.remove('hidden'); gameOverEl.classList.toggle('win', won); gameOverEl.classList.toggle('lose', !won);
+  overlay.style.display='none'; bgm.pause(); bgmOpening.pause();
+  const goIcon=document.getElementById('goIcon'), goSub=document.getElementById('goSub'), goStat1=document.getElementById('goStat1'), goStat2=document.getElementById('goStat2');
+  const elapsed = gameStartTime ? Math.floor((performance.now()-gameStartTime)/1000) : 0;
+  const mins=String(Math.floor(elapsed/60)).padStart(2,'0'), secs=String(elapsed%60).padStart(2,'0');
+  if(goStat1) goStat1.textContent=`🔋 ${collected}/40 pil`;
+  if(goStat2) goStat2.textContent=`⏱️ ${mins}:${secs} • 🔋 ${battery.toFixed(0)}%`;
+  if(won){
+    if(goIcon) goIcon.textContent='🚪✨';
+    goTitle.textContent='KAÇTIN!';
+    if(goSub) goSub.textContent='Karanlığı yendin — ışık seninleydi';
+    goDesc.textContent=`40 pili toplayıp 90×90 evden canlı çıktın. Joker ve örümcek arkanda kaldı.`;
+  } else {
+    if(goIcon) goIcon.textContent='☠️';
+    goTitle.textContent='YAKALANDIN';
+    if(goSub) goSub.textContent='Karanlık seni yuttu';
+    const wasPet = pet.position.distanceTo(controls.getObject().position) < creature.position.distanceTo(controls.getObject().position);
+    goDesc.textContent = wasPet ? 'Örümcek bacakları ensende hissettin... Feneri ve staminayı idareli kullanmalıydın.' : 'Joker fenerini söndürdüğün an ensendeydi... Bir dahaki sefere ışığı kapatma.';
+  }
 }
 let last=performance.now();
 function animate(now){

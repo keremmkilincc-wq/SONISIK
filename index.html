@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SON IŞIK - 3D FPS Korku</title>
-<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script type="importmap">
 {
@@ -33,7 +33,7 @@
     <h1 class="creepy-title"><span class="glitch" data-text="SON IŞIK">SON IŞIK</span></h1>
     <p class="creepy-sub">Işıklar söndü. El fenerin titriyor. <br><em>Joker ve sadık köpeği</em> karanlıkta avlanıyor.</p>
     <div class="creepy-badges">
-      <span>🔋 40 pil</span><span>🏚️ 4 odacık</span><span>👹 Joker 1.70m</span><span>🐕 Pet</span>
+      <span>🔋 40 pil</span><span>🏚️ 4 odacık</span><span>👹 Joker 1.70m</span><span>🐕 Örümcek</span>
     </div>
     <p id="overlayText" class="overlay-text">Pil bitmeden 40 pili topla, 4 odacığı ara, masa-sandalyelerin arasından sıyrıl ve <strong>çıkış kapısını</strong> bul.</p>
     <button id="startBtn" class="creepy-btn"><span class="btn-glow"></span> ▶ OYNA — KORKUYOR MUSUN?</button>
@@ -59,9 +59,19 @@
 </div>
 
 <div id="gameOver" class="hidden">
-  <h2 id="goTitle">YAKALANDIN</h2>
-  <p id="goDesc">Yaratık seni buldu...</p>
-  <button id="restartBtn">TEKRAR DENE</button>
+  <div class="go-vignette"></div>
+  <div class="blood-drip"></div>
+  <div class="go-content">
+    <div id="goIcon" class="go-icon">☠️</div>
+    <h2 id="goTitle" class="go-title">YAKALANDIN</h2>
+    <p id="goSub" class="go-sub">Karanlık seni yuttu</p>
+    <p id="goDesc" class="go-desc">Joker fenerini söndürdüğün an ensendeydi...</p>
+    <div id="goStats" class="go-stats">
+      <span id="goStat1">🔋 12/40 pil</span><span id="goStat2">⏱️ 02:34</span>
+    </div>
+    <button id="restartBtn" class="go-btn">TEKRAR DENE</button>
+    <p class="go-hint">ESC ile çıkış • R ile tekrar</p>
+  </div>
 </div>
 <div id="loading">Yükleniyor...</div>
 <audio id="bgmOpening" src="assets/opening.mp3" loop preload="auto"></audio>
