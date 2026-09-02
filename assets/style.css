@@ -1,8 +1,12 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,system-ui;background:#020205;color:#fff;overflow:hidden}
 canvas{display:block}
-#hud{position:fixed;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;z-index:10;font-weight:700;text-shadow:0 2px 8px #000;gap:8px;flex-wrap:wrap}
+#hud{position:fixed;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;z-index:10;font-weight:700;text-shadow:0 2px 8px #000;gap:8px;flex-wrap:wrap;align-items:center}
 #battery{background:rgba(0,0,0,.6);padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.15)}
+#staminaWrap{position:relative;width:140px;height:18px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:999px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#staminaBar{position:absolute;left:0;top:0;bottom:0;width:100%;background:linear-gradient(90deg,#22c55e,#86efac);transition:width .12s linear}
+#staminaBar.low{background:linear-gradient(90deg,#ef4444,#fca5a5)}
+#staminaVal{position:relative;font-size:11px;z-index:1}
 #stats{background:rgba(0,0,0,.6);padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.15);font-size:13px}
 #hint{opacity:.7;font-size:12px;align-self:center}
 #crosshair{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-size:22px;opacity:.8;pointer-events:none;z-index:10}
