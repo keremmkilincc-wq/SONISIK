@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 
 const overlay = document.getElementById('overlay');
@@ -169,7 +170,7 @@ function wall(w,h,x,y,z,ry=0){
 wall(90,5,0,2.5,-45); wall(90,5,0,2.5,45); wall(90,5,-45,2.5,0,Math.PI/2); wall(90,5,45,2.5,0,Math.PI/2);
 
 const crateBoxes=[];
-for(let i=0;i<24;i++){
+for(let i=0;i<20;i++){
   const sx=0.9+Math.random()*1.4, sy=1+Math.random()*1.6, sz=0.9+Math.random()*1.4;
   const mat = i%3===0 ? new THREE.MeshStandardMaterial({map:crateTex}) : (i%3===1? new THREE.MeshStandardMaterial({color:0x3a2518, roughness:0.9}) : wallMat);
   const b=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), mat);
@@ -179,6 +180,23 @@ for(let i=0;i<24;i++){
   colliders.push({ minX:b.position.x-sx/2-0.45, maxX:b.position.x+sx/2+0.45, minZ:b.position.z-sz/2-0.45, maxZ:b.position.z+sz/2+0.45 });
   crateBoxes.push(b);
 }
+// masa+sandalye engelleri (FBX)
+const fbxLoader=new FBXLoader();
+const tablePositions=[
+  [-12,-8],[12,-12],[-18,18],[18,16],[0,22],[-28,-22],[28,-24],[-8,30]
+];
+fbxLoader.load('assets/models/table.fbx', (fbx)=>{
+  fbx.traverse(c=>{ if(c.isMesh){ c.castShadow=false; c.receiveShadow=false; }});
+  tablePositions.forEach(([x,z],i)=>{
+    const clone=fbx.clone(true);
+    clone.scale.set(0.015,0.015,0.015);
+    clone.position.set(x,0,z);
+    clone.rotation.y=Math.random()*Math.PI*2;
+    scene.add(clone);
+    // collider ~1.8m capinda masa+sandalye
+    colliders.push({ minX:x-1.1, maxX:x+1.1, minZ:z-1.1, maxZ:z+1.1 });
+  });
+}, undefined, (e)=> console.log('table fbx load fail',e));
 
 const doorMat = new THREE.MeshStandardMaterial({color:0x7f1d1d, emissive:0x450a0a, emissiveIntensity:0.8});
 const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.6,3.2,0.4), doorMat);
