@@ -17,6 +17,7 @@ const staminaVal = document.getElementById('staminaVal');
 const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
 const bgm = document.getElementById('bgm');
+const bgmOpening = document.getElementById('bgmOpening');
 const muteBtn = document.getElementById('muteBtn');
 const loadingEl = document.getElementById('loading');
 const settingsBtn = document.getElementById('settingsBtn');
@@ -42,12 +43,23 @@ const controls = new PointerLockControls(camera, renderer.domElement);
 scene.add(controls.getObject());
 
 let musicStarted=false;
+let openingStarted=false;
+async function startOpening(){ try{ bgmOpening.volume=0.50; bgmOpening.loop=true; await bgmOpening.play(); openingStarted=true; } catch(e){ console.log('opening engellendi',e); } }
 async function startMusic(){ try{ bgm.volume=0.55; bgm.loop=true; await bgm.play(); musicStarted=true; muteBtn.textContent='🔊'; } catch(e){ console.log('bgm engellendi',e); } }
+function stopOpening(){ bgmOpening.pause(); bgmOpening.currentTime=0; }
+setTimeout(()=> startOpening(), 500);
+document.addEventListener('click', ()=>{ if(!openingStarted && !musicStarted) startOpening(); }, {once:true});
 function tryLock(){ try{ controls.lock(); } catch(e){ console.error(e); overlay.style.display='none'; } }
-startBtn.addEventListener('click', e=>{ e.stopPropagation(); tryLock(); startMusic(); });
+startBtn.addEventListener('click', e=>{ e.stopPropagation(); tryLock(); stopOpening(); startMusic(); });
 overlay.addEventListener('click', e=>{ if(e.target===overlay) tryLock(); });
 restartBtn.onclick = () => location.reload();
-muteBtn.onclick = async ()=>{ bgm.muted=!bgm.muted; muteBtn.textContent=bgm.muted?'🔇':'🔊'; muteBtn.classList.toggle('muted', bgm.muted); if(!musicStarted && !bgm.muted) await startMusic(); };
+muteBtn.onclick = async ()=>{
+  const openingActive = overlay.style.display!=='none' && !controls.isLocked;
+  bgm.muted=!bgm.muted; bgmOpening.muted=bgm.muted;
+  muteBtn.textContent=bgm.muted?'🔇':'🔊'; muteBtn.classList.toggle('muted', bgm.muted);
+  if(!openingActive && !musicStarted && !bgm.muted) await startMusic();
+  if(openingActive && !openingStarted && !bgmOpening.muted) await startOpening();
+};
 settingsBtn.onclick = ()=> settingsPanel.classList.remove('hidden');
 closeSettings.onclick = ()=> settingsPanel.classList.add('hidden');
 settingsPanel.addEventListener('click', e=>{ if(e.target===settingsPanel) settingsPanel.classList.add('hidden'); });
@@ -59,8 +71,8 @@ function setMode(light){
 }
 modeDark.onclick=()=> setMode(false);
 modeLight.onclick=()=> setMode(true);
-controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden'); if(!musicStarted) startMusic(); });
-controls.addEventListener('unlock', () => { if(!gameEnded && settingsPanel.classList.contains('hidden')) overlay.style.display='flex'; });
+controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden'); stopOpening(); if(!musicStarted) startMusic(); });
+controls.addEventListener('unlock', () => { if(!gameEnded && settingsPanel.classList.contains('hidden')){ overlay.style.display='flex'; bgm.pause(); startOpening(); } });
 document.addEventListener('click', ()=>{ if(overlay.style.display==='none' && !controls.isLocked && !gameEnded && settingsPanel.classList.contains('hidden')) tryLock(); });
 
 // --- KORKU EVI TEMALI DOKULAR ---
@@ -458,7 +470,7 @@ function checkWin(){
   else if(collected<40 && controls.getObject().position.distanceTo(doorFrame.position)<2.4){ doorFrame.material.emissiveIntensity=1.6; setTimeout(()=> doorFrame.material.emissiveIntensity=0.8,180); }
 }
 function endGame(won){
-  gameEnded=true; controls.unlock(); gameOverEl.classList.remove('hidden'); overlay.style.display='none'; bgm.pause();
+  gameEnded=true; controls.unlock(); gameOverEl.classList.remove('hidden'); overlay.style.display='none'; bgm.pause(); bgmOpening.pause();
   if(won){ goTitle.textContent='KAÇTIN! 🎉'; goTitle.style.color='#22c55e'; goDesc.textContent=`${collected}/40 pil ile kaçtın! Kalan pil ${battery.toFixed(0)}%`; }
   else { goTitle.textContent='YAKALANDIN ☠️'; goTitle.style.color='#ef4444'; goDesc.textContent='Feneri ve staminayı idareli kullan!'; }
 }
