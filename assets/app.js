@@ -270,6 +270,21 @@ createRoom(28,28,9,'south');
 createRoom(-28,28,9,'east');
 createRoom(28,-28,9,'west');
 
+// masa pozisyonlari - crate oncesi tanimli olmali
+const tablePositions=[
+  [-12,-8],[12,-12],[-18,18],[18,16],[6,6],[-28,-22],[28,-24],[-8,30]
+];
+function isRoomInside(x,z){
+  for(const r of roomCenters){ if(Math.abs(x-r[0])<6.5 && Math.abs(z-r[1])<6.5) return true; }
+  return false;
+}
+function isNearPickup(x,z){
+  const picks=[[-42,-42],[42,-42],[-42,42],[42,42],[0,-38],[-20,34],[22,36],[-36,-18],[36,-20],[-38,10],[38,12],[-10,-30],[10,-32],[-30,22],[30,24],[-18,-28],[18,-26],[-42,0],[42,2],[0,38],[-34,34],[34,-34],[-26,-10],[26,10],[-12,18],[12,20],[-36,28],[36,28],[-8,-42],[8,-42],[-14,40],[14,40],[-28,-32],[28,-32],[-6,30],[6,32],[-18,0],[18,0],[0,12],[0,-12]];
+  for(const p of picks){ if(Math.hypot(x-p[0], z-p[1])<3.2) return true; }
+  for(const t of tablePositions){ if(Math.hypot(x-t[0], z-t[1])<3.0) return true; }
+  return false;
+}
+
 const crateBoxes=[];
 for(let i=0;i<22;i++){
   const sx=0.9+Math.random()*1.4, sy=1+Math.random()*1.6, sz=0.9+Math.random()*1.4;
@@ -282,21 +297,8 @@ for(let i=0;i<22;i++){
   colliders.push({ minX:b.position.x-sx/2-0.45, maxX:b.position.x+sx/2+0.45, minZ:b.position.z-sz/2-0.45, maxZ:b.position.z+sz/2+0.45 });
   crateBoxes.push(b);
 }
-function isRoomInside(x,z){
-  for(const r of roomCenters){ if(Math.abs(x-r[0])<6.5 && Math.abs(z-r[1])<6.5) return true; }
-  return false;
-}
-function isNearPickup(x,z){
-  const picks=[[-42,-42],[42,-42],[-42,42],[42,42],[0,-38],[-20,34],[22,36],[-36,-18],[36,-20],[-38,10],[38,12],[-10,-30],[10,-32],[-30,22],[30,24],[-18,-28],[18,-26],[-42,0],[42,2],[0,38],[-34,34],[34,-34],[-26,-10],[26,10],[-12,18],[12,20],[-36,28],[36,28],[-8,-42],[8,-42],[-14,40],[14,40],[-28,-32],[28,-32],[-6,30],[6,32],[-18,0],[18,0],[0,12],[0,-12]];
-  for(const p of picks){ if(Math.hypot(x-p[0], z-p[1])<3.2) return true; }
-  for(const t of tablePositions){ if(Math.hypot(x-t[0], z-t[1])<3.0) return true; }
-  return false;
-}
 // masa+sandalye engelleri (FBX)
 const fbxLoader=new FBXLoader();
-const tablePositions=[
-  [-12,-8],[12,-12],[-18,18],[18,16],[6,6],[-28,-22],[28,-24],[-8,30]
-];
 fbxLoader.load('assets/models/table.fbx', (fbx)=>{
   fbx.traverse(c=>{ if(c.isMesh){ c.castShadow=false; c.receiveShadow=false; }});
   tablePositions.forEach(([x,z],i)=>{
