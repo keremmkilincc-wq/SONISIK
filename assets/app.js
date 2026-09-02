@@ -104,6 +104,41 @@ function makeWallTexture(){
   g.fillStyle='rgba(0,0,0,0.25)'; for(let i=0;i<30;i++) g.fillRect(Math.random()*512,Math.random()*512, 20,20);
   const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(4,1.2); t.colorSpace=THREE.SRGBColorSpace; return t;
 }
+function makeColumnTexture(){
+  const c=document.createElement('canvas'); c.width=256; c.height=512;
+  const g=c.getContext('2d');
+  g.fillStyle='#2b2018'; g.fillRect(0,0,256,512);
+  // dikey oluklar
+  for(let x=0;x<256;x+=32){ g.fillStyle= x%64===0 ? '#3d2b1e' : '#1a120c'; g.fillRect(x,0,4,512); }
+  // yosun / kir
+  g.fillStyle='rgba(20,40,20,0.22)'; for(let i=0;i<40;i++) g.fillRect(Math.random()*256, Math.random()*512, 18, 30);
+  g.fillStyle='rgba(60,10,10,0.16)'; for(let i=0;i<8;i++){ const x=Math.random()*200+20, y=Math.random()*400+40; g.beginPath(); g.arc(x,y,10,0,Math.PI*2); g.fill(); }
+  // catlak
+  g.strokeStyle='rgba(0,0,0,0.35)'; g.lineWidth=1;
+  for(let i=0;i<6;i++){ g.beginPath(); g.moveTo(Math.random()*256,0); g.bezierCurveTo(Math.random()*256,170, Math.random()*256,340, Math.random()*256,512); g.stroke(); }
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1,1); t.colorSpace=THREE.SRGBColorSpace; return t;
+}
+function makeDoorTexture(){
+  const c=document.createElement('canvas'); c.width=512; c.height=512;
+  const g=c.getContext('2d');
+  // eski 90lar ahsap kapi
+  g.fillStyle='#3b2314'; g.fillRect(0,0,512,512);
+  g.fillStyle='#4a2e1a'; g.fillRect(18,18,476,476);
+  g.fillStyle='#2b1a0e'; g.fillRect(30,30,452,452);
+  // panel cizgileri
+  g.strokeStyle='#1a0f07'; g.lineWidth=4;
+  g.strokeRect(46,46,420,190); g.strokeRect(46,260,420,200);
+  g.fillStyle='#5a341e'; g.fillRect(60,60,392,162); g.fillRect(60,274,392,172);
+  // soyulmus boya
+  g.fillStyle='rgba(210,210,200,0.18)';
+  for(let i=0;i<12;i++){ const x=50+Math.random()*400, y=50+Math.random()*400; g.beginPath(); g.ellipse(x,y, 18+Math.random()*22, 10+Math.random()*12, Math.random()*0.6,0,Math.PI*2); g.fill(); }
+  // pasli kol
+  g.fillStyle='#8a5a1a'; g.beginPath(); g.arc(420,256,18,0,Math.PI*2); g.fill();
+  g.fillStyle='#4a3000'; g.beginPath(); g.arc(420,256,8,0,Math.PI*2); g.fill();
+  // kan izi
+  g.fillStyle='rgba(90,10,10,0.22)'; g.fillRect(380,80,6,120); g.beginPath(); g.arc(383,200,10,0,Math.PI*2); g.fill();
+  const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t;
+}
 function makeCrateTexture(){
   const c=document.createElement('canvas'); c.width=256; c.height=256;
   const g=c.getContext('2d');
@@ -116,6 +151,10 @@ function makeCrateTexture(){
 const woodTex=makeWoodTexture();
 const wallTex=makeWallTexture();
 const crateTex=makeCrateTexture();
+const columnTex=makeColumnTexture();
+const doorTex=makeDoorTexture();
+const columnMat=new THREE.MeshStandardMaterial({map:columnTex, roughness:0.8});
+const doorWoodMat=new THREE.MeshStandardMaterial({map:doorTex, roughness:0.7});
 
 // lights
 const ambientLight = new THREE.AmbientLight(0x301010, 0.22); scene.add(ambientLight);
@@ -180,6 +219,19 @@ function wall(w,h,x,y,z,ry=0){
   return m;
 }
 wall(90,5,0,2.5,-45); wall(90,5,0,2.5,45); wall(90,5,-45,2.5,0,Math.PI/2); wall(90,5,45,2.5,0,Math.PI/2);
+// kolonlar - tavana kadar, eski ve urpertici
+function addColumn(x,z){
+  const col=new THREE.Mesh(new THREE.BoxGeometry(0.85,5,0.85), columnMat);
+  col.position.set(x,2.5,z); col.castShadow=false; col.receiveShadow=false; scene.add(col);
+  colliders.push({ minX:x-0.62, maxX:x+0.62, minZ:z-0.62, maxZ:z+0.62 });
+}
+for(let x=-40;x<=40;x+=10){ addColumn(x,-44.6); addColumn(x,44.6); }
+for(let z=-35;z<=35;z+=10){ addColumn(-44.6,z); addColumn(44.6,z); }
+// kose buyuk kolonlar
+[[-44.6,-44.6],[44.6,-44.6],[-44.6,44.6],[44.6,44.6]].forEach(([x,z])=>{
+  const big=new THREE.Mesh(new THREE.BoxGeometry(1.2,5,1.2), columnMat);
+  big.position.set(x,2.5,z); scene.add(big);
+});
 
 // 4 odacik - kapilari acik
 const roomCenters=[[-28,-28],[28,28],[-28,28],[28,-28]];
@@ -252,8 +304,8 @@ fbxLoader.load('assets/models/table.fbx', (fbx)=>{
   });
 }, undefined, (e)=> console.log('table fbx load fail',e));
 
-const doorMat = new THREE.MeshStandardMaterial({color:0x7f1d1d, emissive:0x450a0a, emissiveIntensity:0.8});
-const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.6,3.2,0.4), doorMat);
+const doorMat = new THREE.MeshStandardMaterial({map:doorTex, roughness:0.7, emissive:0x1a0a0a, emissiveIntensity:0.12});
+const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.6,3.4,0.38), doorMat);
 doorFrame.position.set(0,1.6,-44.85); scene.add(doorFrame);
 const doorLight = new THREE.PointLight(0xef4444, 6, 11); doorLight.position.set(0,1.6,-43.2); scene.add(doorLight);
 let doorSprite; (()=>{ const c=document.createElement('canvas'); c.width=256; c.height=64; const g=c.getContext('2d'); g.fillStyle='#ef4444'; g.font='bold 26px sans-serif'; g.fillText('KİLİTLİ',68,42); const t=new THREE.CanvasTexture(c); doorSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:t})); doorSprite.scale.set(2.2,0.55,1); doorSprite.position.set(0,3.0,-44); scene.add(doorSprite); })();
