@@ -12,11 +12,11 @@ const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x020205, 7, 22);
+scene.fog = new THREE.Fog(0x020205, 9, 30);
 scene.background = new THREE.Color(0x020205);
 
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 100);
-camera.position.set(0, 1.7, 6);
+camera.position.set(0, 1.7, 8);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
@@ -50,34 +50,34 @@ const playerFill = new THREE.PointLight(0x334155, 0.6, 4);
 playerFill.position.set(0,0,0);
 camera.add(playerFill);
 
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(36,36), new THREE.MeshStandardMaterial({color:0x0f0f14, roughness:0.9}));
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshStandardMaterial({color:0x0f0f14, roughness:0.9}));
 floor.rotation.x = -Math.PI/2; floor.receiveShadow=true; scene.add(floor);
 
 const wallMat = new THREE.MeshStandardMaterial({color:0x1e1e28, roughness:0.85});
 function wall(w,h,x,y,z,ry=0){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,0.3), wallMat); m.position.set(x,y,z); m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
-wall(36,5,0,2.5,-18); wall(36,5,0,2.5,18); wall(36,5,-18,2.5,0,Math.PI/2); wall(36,5,18,2.5,0,Math.PI/2);
+wall(60,5,0,2.5,-30); wall(60,5,0,2.5,30); wall(60,5,-30,2.5,0,Math.PI/2); wall(60,5,30,2.5,0,Math.PI/2);
 const crateMat = new THREE.MeshStandardMaterial({color:0x2a2a3a});
-for(let i=0;i<12;i++){
-  const b=new THREE.Mesh(new THREE.BoxGeometry(0.7+Math.random()*1, 1+Math.random()*1.0, 0.7+Math.random()*1), i%2?wallMat:crateMat);
-  b.position.set((Math.random()-0.5)*28, b.geometry.parameters.height/2, (Math.random()-0.5)*28);
-  if(b.position.distanceTo(new THREE.Vector3(0,0,6))<3.5) b.position.z+=6;
+for(let i=0;i<22;i++){
+  const b=new THREE.Mesh(new THREE.BoxGeometry(0.7+Math.random()*1.4, 1+Math.random()*1.4, 0.7+Math.random()*1.4), i%2?wallMat:crateMat);
+  b.position.set((Math.random()-0.5)*48, b.geometry.parameters.height/2, (Math.random()-0.5)*48);
+  if(b.position.distanceTo(new THREE.Vector3(0,0,8))<4) b.position.z+=8;
   b.castShadow=true; b.receiveShadow=true; scene.add(b);
 }
 
 // Door - FIX 3: baslangicta KIRMIZI/KAPALI
 const doorMat = new THREE.MeshStandardMaterial({color:0x7f1d1d, emissive:0x450a0a, emissiveIntensity:0.8});
 const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4,3,0.4), doorMat);
-doorFrame.position.set(0,1.5,-17.85);
+doorFrame.position.set(0,1.5,-29.85);
 scene.add(doorFrame);
-const doorLight = new THREE.PointLight(0xef4444, 5, 9);
-doorLight.position.set(0,1.5,-16.5); scene.add(doorLight);
+const doorLight = new THREE.PointLight(0xef4444, 6, 11);
+doorLight.position.set(0,1.5,-28.2); scene.add(doorLight);
 let doorSprite;
 (() => {
   const c=document.createElement('canvas'); c.width=256; c.height=64;
   const g=c.getContext('2d'); g.fillStyle='#ef4444'; g.font='bold 26px sans-serif'; g.fillText('KİLİTLİ',68,42);
   const t=new THREE.CanvasTexture(c);
   doorSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:t}));
-  doorSprite.scale.set(2.2,0.55,1); doorSprite.position.set(0,2.9,-17); scene.add(doorSprite);
+  doorSprite.scale.set(2.2,0.55,1); doorSprite.position.set(0,2.9,-29); scene.add(doorSprite);
 })();
 function openDoor(){
   doorMat.color.set(0x14532d); doorMat.emissive.set(0x22c55e); doorMat.emissiveIntensity=1.3;
@@ -105,8 +105,8 @@ function spawnBattery(x,z){
   g.userData={ collected:false, baseY:0.48, t:Math.random()*6 };
   pickupGroup.add(g); pickups.push(g);
 }
-// 7 pil - daginik ve kutu arkasi zor yerler
-[ [-14.5,-15.2],[15.0,-14.8],[-15.8,14.2],[14.6,13.5],[0,-10.5],[-7.5,6.8],[9.2,-2.3] ].forEach(([x,z])=> spawnBattery(x,z));
+// 15 pil - buyuk harita daginik zor yerler
+[ [-26,-27],[26,-26],[-27,26],[27,27],[0,-22],[-18,12],[19,-8],[ -8,18],[8,22],[-22,-8],[22,8],[-25,0],[25,-2],[0,26],[-12,-25] ].forEach(([x,z])=> spawnBattery(x,z));
 
 // Creature - FIX 1: daha gorunur + yakin spawn
 const creature=new THREE.Group();
@@ -123,7 +123,7 @@ creature.add(cBody,cHead,eye1,eye2,cLight);
 creature.position.set(4,0, -4); // FIX: yakin baslasin, hemen gorunsun
 scene.add(creature);
 let creatureState='patrol';
-let patrolTarget=new THREE.Vector3((Math.random()-0.5)*16,0,(Math.random()-0.5)*16);
+let patrolTarget=new THREE.Vector3((Math.random()-0.5)*34,0,(Math.random()-0.5)*34);
 let fleeUntil=0;
 
 let battery=100;
@@ -141,8 +141,8 @@ addEventListener('keyup', e=> keys[e.code]=false);
 
 function clampPlayer(){
   const p=controls.getObject().position;
-  p.x=Math.max(-17,Math.min(17,p.x));
-  p.z=Math.max(-17,Math.min(17,p.z));
+  p.x=Math.max(-29,Math.min(29,p.x));
+  p.z=Math.max(-29,Math.min(29,p.z));
   p.y=1.7;
 }
 function move(dt){
@@ -164,10 +164,10 @@ function updatePickups(dt){
     if(dist<1.7){
       g.userData.collected=true; g.visible=false;
       collected++;
-      battery=Math.min(100, battery+20);
-      pickupsEl.textContent=`${collected}/7`;
+      battery=Math.min(100, battery+14);
+      pickupsEl.textContent=`${collected}/15`;
       batteryVal.textContent=battery.toFixed(0);
-      if(collected>=7){ doorStatusEl.textContent='AÇIK'; doorStatusEl.classList.add('open'); openDoor(); }
+      if(collected>=15){ doorStatusEl.textContent='AÇIK'; doorStatusEl.classList.add('open'); openDoor(); }
       flashlight.intensity=70; setTimeout(()=> flashlight.intensity=flashOn?55:0,140);
       // creature gets angrier
       if(collected===3) creature.position.lerp(controls.getObject().position, 0.15);
@@ -199,10 +199,10 @@ function updateCreature(dt, now){
     const away=new THREE.Vector3().subVectors(cPos, playerPos).normalize().multiplyScalar(7);
     target=new THREE.Vector3().addVectors(cPos, away); speed=3.6;
   } else if(creatureState==='chase'){
-    target=playerPos.clone(); speed=2.6 + collected*0.35 + (battery<30?0.7:0); // FIX 4: cok daha hizli
+    target=playerPos.clone(); speed=3.0 + collected*0.18 + (battery<30?0.9:0);
   } else {
-    target=patrolTarget; speed=1.35;
-    if(cPos.distanceTo(patrolTarget)<1.0) patrolTarget.set((Math.random()-0.5)*18,0,(Math.random()-0.5)*18);
+    target=patrolTarget; speed=1.55;
+    if(cPos.distanceTo(patrolTarget)<1.0) patrolTarget.set((Math.random()-0.5)*34,0,(Math.random()-0.5)*34);
   }
   if(target){
     const dir=new THREE.Vector3().subVectors(target,cPos); dir.y=0;
@@ -215,15 +215,15 @@ function updateCreature(dt, now){
   if(dist<1.35 && !gameEnded) endGame(false);
 }
 function checkWin(){
-  if(collected>=7 && controls.getObject().position.distanceTo(doorFrame.position)<2.4) endGame(true);
-  else if(collected<7 && controls.getObject().position.distanceTo(doorFrame.position)<2.0){
+  if(collected>=15 && controls.getObject().position.distanceTo(doorFrame.position)<2.6) endGame(true);
+  else if(collected<15 && controls.getObject().position.distanceTo(doorFrame.position)<2.2){
     // bump closed door
     doorFrame.material.emissiveIntensity=1.6; setTimeout(()=> doorFrame.material.emissiveIntensity=0.8,180);
   }
 }
 function endGame(won){
   gameEnded=true; controls.unlock(); gameOverEl.classList.remove('hidden'); overlay.style.display='none';
-  if(won){ goTitle.textContent='KAÇTIN! 🎉'; goTitle.style.color='#22c55e'; goDesc.textContent=`${collected}/7 pil ile kaçtın! Kalan pil ${battery.toFixed(0)}%`; }
+  if(won){ goTitle.textContent='KAÇTIN! 🎉'; goTitle.style.color='#22c55e'; goDesc.textContent=`${collected}/15 pil ile kaçtın! Kalan pil ${battery.toFixed(0)}%`; }
   else { goTitle.textContent='YAKALANDIN ☠️'; goTitle.style.color='#ef4444'; goDesc.textContent='Feneri daha akıllı kullan, koşma sesi çıkarıyor!'; }
 }
 let last=performance.now();
@@ -232,9 +232,9 @@ function animate(now){
   const dt=Math.min(0.05,(now-last)/1000); last=now;
   if(controls.isLocked && !gameEnded){
     move(dt);
-    // FIX 4: pil daha hizli bitiyor
-    if(flashOn && now-lastDrain>120){
-      battery=Math.max(0,battery-0.09);
+    // baya hizli bitis
+    if(flashOn && now-lastDrain>100){
+      battery=Math.max(0,battery-0.22);
       batteryVal.textContent=battery.toFixed(0);
       if(battery<=0){ flashlight.intensity=0; flashOn=false; playerFill.intensity=0.12; }
       lastDrain=now;
@@ -247,7 +247,7 @@ function animate(now){
     pickups.forEach(g=>{ if(!g.userData.collected) g.rotation.y+=0.006; });
   }
   // breathing fog
-  if(battery<25) scene.fog=new THREE.Fog(0x1a0505, 4, 16); else scene.fog=new THREE.Fog(0x020205, 7, 22);
+  if(battery<25) scene.fog=new THREE.Fog(0x1a0505, 5, 18); else scene.fog=new THREE.Fog(0x020205, 9, 30);
   // creature always visible ping
   if(!gameEnded && performance.now()%3000<100) cLight.intensity=4;
   renderer.render(scene, camera);
