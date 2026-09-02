@@ -24,13 +24,22 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-const controls = new PointerLockControls(camera, document.body);
+const controls = new PointerLockControls(camera, renderer.domElement);
 scene.add(controls.getObject());
 
-startBtn.onclick = () => controls.lock();
+function tryLock(){
+  // must be called from user gesture
+  try{ controls.lock(); } catch(e){ console.error('lock fail',e); overlay.style.display='none'; }
+}
+startBtn.addEventListener('click', (e)=>{ e.stopPropagation(); tryLock(); });
+overlay.addEventListener('click', (e)=>{ if(e.target===overlay) tryLock(); });
 restartBtn.onclick = () => location.reload();
-controls.addEventListener('lock', () => { overlay.style.display = 'none'; gameOverEl.classList.add('hidden'); });
-controls.addEventListener('unlock', () => { if(!gameEnded) overlay.style.display = 'flex'; });
+controls.addEventListener('lock', () => { overlay.style.display = 'none'; gameOverEl.classList.add('hidden'); console.log('locked'); });
+controls.addEventListener('unlock', () => { if(!gameEnded) overlay.style.display = 'flex'; console.log('unlocked'); });
+document.addEventListener('click', ()=>{
+  // fallback: canvas click also locks if game started
+  if(overlay.style.display==='none' && !controls.isLocked && !gameEnded) tryLock();
+});
 
 // lights
 scene.add(new THREE.AmbientLight(0x1a1a2e, 0.35));
