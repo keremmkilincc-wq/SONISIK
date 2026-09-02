@@ -12,6 +12,8 @@ const staminaBar = document.getElementById('staminaBar');
 const staminaVal = document.getElementById('staminaVal');
 const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
+const bgm = document.getElementById('bgm');
+const muteBtn = document.getElementById('muteBtn');
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x020205, 12, 40);
@@ -29,11 +31,14 @@ document.body.appendChild(renderer.domElement);
 const controls = new PointerLockControls(camera, renderer.domElement);
 scene.add(controls.getObject());
 
+let musicStarted=false;
+async function startMusic(){ try{ bgm.volume=0.55; bgm.loop=true; await bgm.play(); musicStarted=true; muteBtn.textContent='🔊'; } catch(e){ console.log('bgm autoplay engellendi',e); } }
 function tryLock(){ try{ controls.lock(); } catch(e){ console.error(e); overlay.style.display='none'; } }
-startBtn.addEventListener('click', e=>{ e.stopPropagation(); tryLock(); });
+startBtn.addEventListener('click', e=>{ e.stopPropagation(); tryLock(); startMusic(); });
 overlay.addEventListener('click', e=>{ if(e.target===overlay) tryLock(); });
 restartBtn.onclick = () => location.reload();
-controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); });
+muteBtn.onclick = async ()=>{ bgm.muted=!bgm.muted; muteBtn.textContent=bgm.muted?'🔇':'🔊'; muteBtn.classList.toggle('muted', bgm.muted); if(!musicStarted && !bgm.muted) await startMusic(); };
+controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); if(!musicStarted) startMusic(); });
 controls.addEventListener('unlock', () => { if(!gameEnded) overlay.style.display='flex'; });
 document.addEventListener('click', ()=>{ if(overlay.style.display==='none' && !controls.isLocked && !gameEnded) tryLock(); });
 
@@ -199,8 +204,9 @@ function checkWin(){
 }
 function endGame(won){
   gameEnded=true; controls.unlock(); gameOverEl.classList.remove('hidden'); overlay.style.display='none';
-  if(won){ goTitle.textContent='KAÇTIN! 🎉'; goTitle.style.color='#22c55e'; goDesc.textContent=`${collected}/40 pil ile kaçtın! Kalan pil ${battery.toFixed(0)}%`; }
-  else { goTitle.textContent='YAKALANDIN ☠️'; goTitle.style.color='#ef4444'; goDesc.textContent='Feneri ve staminayı idareli kullan!'; }
+  bgm.pause();
+  if(won){ goTitle.textContent='KAÇTIN! 🎉'; goTitle.style.color='#22c55e'; goDesc.textContent=`${collected}/40 pil ile kaçtın! Kalan pil ${battery.toFixed(0)}%`; bgm.currentTime=0; }
+  else { goTitle.textContent='YAKALANDIN ☠️'; goTitle.style.color='#ef4444'; goDesc.textContent='Feneri ve staminayı idareli kullan!'; bgm.pause(); }
 }
 let last=performance.now();
 function animate(now){
