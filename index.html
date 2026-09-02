@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SON IŞIK - 3D FPS Korku</title>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script type="importmap">
 {
@@ -23,13 +24,25 @@
   <button id="muteBtn" title="Sesi aç/kapat">🔊</button>
 </div>
 <div id="crosshair">+</div>
+
 <div id="overlay">
-  <h1>SON IŞIK</h1>
-  <p id="overlayText">Pil bitmeden 40 pili topla, dev korku evinde 2 canavardan kaç.</p>
-  <button id="startBtn">OYNA</button>
-  <p class="sub">WASD hareket, SHIFT koş (stamina), F fener - Duvarlardan geçemezsin!</p>
-  <button id="settingsBtn" title="Ayarlar">⚙️ Ayarlar</button>
+  <div class="blood-drip"></div>
+  <div class="overlay-vignette"></div>
+  <div class="overlay-content">
+    <p class="eyebrow">☠ 40 PİL TOPLA — 90×90 KORKU EVİ — 2 CANAVAR ☠</p>
+    <h1 class="creepy-title"><span class="glitch" data-text="SON IŞIK">SON IŞIK</span></h1>
+    <p class="creepy-sub">Işıklar söndü. El fenerin titriyor. <br><em>Joker ve sadık köpeği</em> karanlıkta avlanıyor.</p>
+    <div class="creepy-badges">
+      <span>🔋 40 pil</span><span>🏚️ 4 odacık</span><span>👹 Joker 1.70m</span><span>🐕 Pet</span>
+    </div>
+    <p id="overlayText" class="overlay-text">Pil bitmeden 40 pili topla, 4 odacığı ara, masa-sandalyelerin arasından sıyrıl ve <strong>çıkış kapısını</strong> bul.</p>
+    <button id="startBtn" class="creepy-btn"><span class="btn-glow"></span> ▶ OYNA — KORKUYOR MUSUN?</button>
+    <p class="sub creepy-sub2">WASD hareket • SHIFT koş (stamina) • F fener • Duvarlardan geçemezsin</p>
+    <button id="settingsBtn" title="Ayarlar">⚙️ Ayarlar</button>
+  </div>
+  <div class="eyes"><span>👁️</span><span>👁️</span></div>
 </div>
+
 <div id="settingsPanel" class="hidden">
   <div id="settingsBox">
     <h3>⚙️ Ayarlar</h3>
@@ -44,6 +57,7 @@
     <button id="closeSettings">Kapat</button>
   </div>
 </div>
+
 <div id="gameOver" class="hidden">
   <h2 id="goTitle">YAKALANDIN</h2>
   <p id="goDesc">Yaratık seni buldu...</p>

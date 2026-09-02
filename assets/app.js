@@ -169,16 +169,58 @@ function wall(w,h,x,y,z,ry=0){
 }
 wall(90,5,0,2.5,-45); wall(90,5,0,2.5,45); wall(90,5,-45,2.5,0,Math.PI/2); wall(90,5,45,2.5,0,Math.PI/2);
 
+// 4 odacik - kapilari acik
+const roomCenters=[[-28,-28],[28,28],[-28,28],[28,-28]];
+function createRoom(cx,cz,size,doorSide){
+  const half=size/2; const h=3.2;
+  // kuzey duvar
+  if(doorSide==='north'){
+    const seg=(size-2.6)/2;
+    wall(seg,h,cx - (size/2 - seg/2),h/2,cz-half);
+    wall(seg,h,cx + (size/2 - seg/2),h/2,cz-half);
+  } else wall(size,h,cx,h/2,cz-half);
+  // guney
+  if(doorSide==='south'){
+    const seg=(size-2.6)/2;
+    wall(seg,h,cx - (size/2 - seg/2),h/2,cz+half);
+    wall(seg,h,cx + (size/2 - seg/2),h/2,cz+half);
+  } else wall(size,h,cx,h/2,cz+half);
+  // dogu
+  if(doorSide==='east'){
+    const seg=(size-2.6)/2;
+    wall(seg,h,cx+half,h/2,cz - (size/2 - seg/2),Math.PI/2);
+    wall(seg,h,cx+half,h/2,cz + (size/2 - seg/2),Math.PI/2);
+  } else wall(size,h,cx+half,h/2,cz,Math.PI/2);
+  // bati
+  if(doorSide==='west'){
+    const seg=(size-2.6)/2;
+    wall(seg,h,cx-half,h/2,cz - (size/2 - seg/2),Math.PI/2);
+    wall(seg,h,cx-half,h/2,cz + (size/2 - seg/2),Math.PI/2);
+  } else wall(size,h,cx-half,h/2,cz,Math.PI/2);
+  // zemin halisi
+  const rug=new THREE.Mesh(new THREE.PlaneGeometry(size-0.6,size-0.6), new THREE.MeshStandardMaterial({color:0x1a0a0a, roughness:1}));
+  rug.rotation.x=-Math.PI/2; rug.position.set(cx,0.015,cz); rug.receiveShadow=false; scene.add(rug);
+}
+createRoom(-28,-28,9,'north');
+createRoom(28,28,9,'south');
+createRoom(-28,28,9,'east');
+createRoom(28,-28,9,'west');
+
 const crateBoxes=[];
-for(let i=0;i<20;i++){
+for(let i=0;i<22;i++){
   const sx=0.9+Math.random()*1.4, sy=1+Math.random()*1.6, sz=0.9+Math.random()*1.4;
   const mat = i%3===0 ? new THREE.MeshStandardMaterial({map:crateTex}) : (i%3===1? new THREE.MeshStandardMaterial({color:0x3a2518, roughness:0.9}) : wallMat);
+  let x,y,z; do{ x=(Math.random()-0.5)*74; z=(Math.random()-0.5)*74; } while( isRoomInside(x,z) );
   const b=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), mat);
-  b.position.set((Math.random()-0.5)*78, sy/2, (Math.random()-0.5)*78);
+  b.position.set(x, sy/2, z);
   if(b.position.distanceTo(new THREE.Vector3(0,0,10))<6) b.position.z+=10;
   b.castShadow=false; b.receiveShadow=false; scene.add(b);
   colliders.push({ minX:b.position.x-sx/2-0.45, maxX:b.position.x+sx/2+0.45, minZ:b.position.z-sz/2-0.45, maxZ:b.position.z+sz/2+0.45 });
   crateBoxes.push(b);
+}
+function isRoomInside(x,z){
+  for(const r of roomCenters){ if(Math.abs(x-r[0])<6.5 && Math.abs(z-r[1])<6.5) return true; }
+  return false;
 }
 // masa+sandalye engelleri (FBX)
 const fbxLoader=new FBXLoader();
