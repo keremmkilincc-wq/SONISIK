@@ -1,13 +1,18 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,system-ui;background:#020205;color:#fff;overflow:hidden}
 canvas{display:block}
-#hud{position:fixed;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;z-index:10;font-weight:700;text-shadow:0 2px 8px #000}
+#hud{position:fixed;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;z-index:10;font-weight:700;text-shadow:0 2px 8px #000;gap:8px;flex-wrap:wrap}
 #battery{background:rgba(0,0,0,.6);padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.15)}
-#hint{opacity:.7;font-size:13px;align-self:center}
+#stats{background:rgba(0,0,0,.6);padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.15);font-size:13px}
+#hint{opacity:.7;font-size:12px;align-self:center}
 #crosshair{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-size:22px;opacity:.8;pointer-events:none;z-index:10}
-#overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(600px 400px at 50% 30%,#1a1a2e 0%,#020205 70%);z-index:20;text-align:center}
+#overlay,#gameOver{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(600px 400px at 50% 30%,#1a1a2e 0%,#020205 70%);z-index:20;text-align:center;padding:24px}
 #overlay h1{font-size:56px;letter-spacing:.12em;background:linear-gradient(90deg,#ffe600,#ff3b30);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-#overlay p{opacity:.8;margin:12px 0}
+#overlay p{opacity:.8;margin:12px 0;max-width:520px}
 #overlay .sub{font-size:12px;opacity:.5}
-#startBtn{margin-top:18px;padding:14px 36px;border-radius:999px;border:0;background:#fff;color:#000;font-weight:900;letter-spacing:.08em;cursor:pointer}
-#startBtn:hover{transform:scale(1.04)}
+#startBtn,#restartBtn{margin-top:18px;padding:14px 36px;border-radius:999px;border:0;background:#fff;color:#000;font-weight:900;letter-spacing:.08em;cursor:pointer}
+#startBtn:hover,#restartBtn:hover{transform:scale(1.04)}
+#gameOver h2{font-size:42px;letter-spacing:.08em}
+#gameOver.hidden{display:none}
+#doorStatus{color:#f59e0b}
+#doorStatus.open{color:#22c55e}

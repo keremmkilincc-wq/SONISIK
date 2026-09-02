@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SON IŞIK - 3D FPS Korku</title>
+<title>SON IŞIK - 3D FPS Korku v0.2</title>
 <link rel="stylesheet" href="assets/style.css">
 <script type="importmap">
 {
@@ -17,14 +17,20 @@
 <body>
 <div id="hud">
   <div id="battery">🔋 <span id="batteryVal">100</span>%</div>
-  <div id="hint">WASD + Mouse | F: Fener | ESC: Çık</div>
+  <div id="stats">🔋 Pil x<span id="pickups">0/5</span> | 🚪 <span id="doorStatus">KAPALI</span></div>
+  <div id="hint">WASD + Mouse | F: Fener | SHIFT: Koş</div>
 </div>
 <div id="crosshair">+</div>
 <div id="overlay">
   <h1>SON IŞIK</h1>
-  <p>Pil bitmeden çıkışı bul. Yaratık karanlıkta avlanır.</p>
+  <p id="overlayText">Pil bitmeden 5 pili topla, yaratığa yakalanmadan çıkış kapısını bul.</p>
   <button id="startBtn">OYNA</button>
-  <p class="sub">Tıkla ve kilitle → WASD hareket, Mouse bakış</p>
+  <p class="sub">Tıkla ve kilitle → WASD hareket, Mouse bakış, SHIFT koş</p>
+</div>
+<div id="gameOver" class="hidden">
+  <h2 id="goTitle">YAKALANDIN</h2>
+  <p id="goDesc">Yaratık seni buldu...</p>
+  <button id="restartBtn">TEKRAR DENE</button>
 </div>
 <script type="module" src="assets/app.js"></script>
 </body>
