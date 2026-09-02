@@ -105,7 +105,8 @@ function spawnBattery(x,z){
   g.userData={ collected:false, baseY:0.48, t:Math.random()*6 };
   pickupGroup.add(g); pickups.push(g);
 }
-[ [-10,-10],[10,-8],[-12,10],[11,11],[0,-6] ].forEach(([x,z])=> spawnBattery(x,z));
+// 7 pil - daginik ve kutu arkasi zor yerler
+[ [-14.5,-15.2],[15.0,-14.8],[-15.8,14.2],[14.6,13.5],[0,-10.5],[-7.5,6.8],[9.2,-2.3] ].forEach(([x,z])=> spawnBattery(x,z));
 
 // Creature - FIX 1: daha gorunur + yakin spawn
 const creature=new THREE.Group();
@@ -145,8 +146,8 @@ function clampPlayer(){
   p.y=1.7;
 }
 function move(dt){
-  const sprint=(keys['ShiftLeft']||keys['ShiftRight'])?1.55:1;
-  const speed=4.2*sprint*dt;
+  const sprint=(keys['ShiftLeft']||keys['ShiftRight'])?1.85:1;
+  const speed=5.8*sprint*dt;
   if(keys['KeyW']) controls.moveForward(speed);
   if(keys['KeyS']) controls.moveForward(-speed);
   if(keys['KeyA']) controls.moveRight(-speed);
@@ -163,10 +164,10 @@ function updatePickups(dt){
     if(dist<1.7){
       g.userData.collected=true; g.visible=false;
       collected++;
-      battery=Math.min(100, battery+22); // FIX 4: daha az pil
-      pickupsEl.textContent=`${collected}/5`;
+      battery=Math.min(100, battery+20);
+      pickupsEl.textContent=`${collected}/7`;
       batteryVal.textContent=battery.toFixed(0);
-      if(collected>=5){ doorStatusEl.textContent='AÇIK'; doorStatusEl.classList.add('open'); openDoor(); }
+      if(collected>=7){ doorStatusEl.textContent='AÇIK'; doorStatusEl.classList.add('open'); openDoor(); }
       flashlight.intensity=70; setTimeout(()=> flashlight.intensity=flashOn?55:0,140);
       // creature gets angrier
       if(collected===3) creature.position.lerp(controls.getObject().position, 0.15);
@@ -214,15 +215,15 @@ function updateCreature(dt, now){
   if(dist<1.35 && !gameEnded) endGame(false);
 }
 function checkWin(){
-  if(collected>=5 && controls.getObject().position.distanceTo(doorFrame.position)<2.4) endGame(true);
-  else if(collected<5 && controls.getObject().position.distanceTo(doorFrame.position)<2.0){
+  if(collected>=7 && controls.getObject().position.distanceTo(doorFrame.position)<2.4) endGame(true);
+  else if(collected<7 && controls.getObject().position.distanceTo(doorFrame.position)<2.0){
     // bump closed door
     doorFrame.material.emissiveIntensity=1.6; setTimeout(()=> doorFrame.material.emissiveIntensity=0.8,180);
   }
 }
 function endGame(won){
   gameEnded=true; controls.unlock(); gameOverEl.classList.remove('hidden'); overlay.style.display='none';
-  if(won){ goTitle.textContent='KAÇTIN! 🎉'; goTitle.style.color='#22c55e'; goDesc.textContent=`${collected}/5 pil ile kaçtın! Kalan pil ${battery.toFixed(0)}%`; }
+  if(won){ goTitle.textContent='KAÇTIN! 🎉'; goTitle.style.color='#22c55e'; goDesc.textContent=`${collected}/7 pil ile kaçtın! Kalan pil ${battery.toFixed(0)}%`; }
   else { goTitle.textContent='YAKALANDIN ☠️'; goTitle.style.color='#ef4444'; goDesc.textContent='Feneri daha akıllı kullan, koşma sesi çıkarıyor!'; }
 }
 let last=performance.now();
