@@ -46,11 +46,52 @@ scene.add(controls.getObject());
 
 let musicStarted=false;
 let openingStarted=false;
-async function startOpening(){ try{ bgmOpening.volume=0.50; bgmOpening.loop=true; await bgmOpening.play(); openingStarted=true; } catch(e){ console.log('opening engellendi',e); } }
+async function startOpening(){ try{ bgmOpening.volume=0.85; bgmOpening.loop=true; await bgmOpening.play(); openingStarted=true; } catch(e){ console.log('opening engellendi',e); } }
 async function startMusic(){ try{ bgm.volume=0.55; bgm.loop=true; await bgm.play(); musicStarted=true; muteBtn.textContent='🔊'; } catch(e){ console.log('bgm engellendi',e); } }
 function stopOpening(){ bgmOpening.pause(); bgmOpening.currentTime=0; }
 setTimeout(()=> startOpening(), 500);
 document.addEventListener('click', ()=>{ if(!openingStarted && !musicStarted) startOpening(); }, {once:true});
+// platform mobil/pc
+const platformBtn=document.getElementById('platformBtn');
+const platformHint=document.getElementById('platformHint');
+const mobileControls=document.getElementById('mobileControls');
+const activePlatform=document.getElementById('activePlatform');
+const joystick=document.getElementById('joystick');
+const stick=document.getElementById('stick');
+const sprintBtn=document.getElementById('sprintBtn');
+const flashBtn=document.getElementById('flashBtn');
+let isMobile = localStorage.getItem('sonisik_platform')==='mobile';
+function applyPlatform(){
+  localStorage.setItem('sonisik_platform', isMobile?'mobile':'pc');
+  if(platformHint) platformHint.textContent = isMobile ? '📱 Mobil sürüm aktif' : '🖥️ PC sürüm aktif';
+  if(activePlatform) activePlatform.textContent = isMobile ? '📱 Mobil sürüm aktif' : '🖥️ PC sürüm aktif';
+  if(platformBtn) platformBtn.textContent = isMobile ? '🖥️ PC\'ye geç' : '📱 Mobil\'e geç';
+  // mobil kontroller sadece mobil ve oyun sirasinda gosterilecek, overlayde gizli
+  if(!isMobile) mobileControls.classList.add('hidden');
+  else if(controls.isLocked) mobileControls.classList.remove('hidden');
+}
+if(platformBtn) platformBtn.onclick=(e)=>{ e.stopPropagation(); isMobile=!isMobile; applyPlatform(); };
+applyPlatform();
+// joystick
+let joyX=0, joyY=0, joyActive=false, sprintHeld=false;
+function setStick(dx,dy){
+  const r=32; const len=Math.hypot(dx,dy); let nx=dx, ny=dy;
+  if(len>r){ nx=dx/len*r; ny=dy/len*r; }
+  stick.style.transform=`translate(${nx}px, ${ny}px)`;
+  joyX=nx/r; joyY=ny/r;
+}
+joystick.addEventListener('touchstart', e=>{ e.preventDefault(); joyActive=true; const rect=joystick.getBoundingClientRect(); const t=e.touches[0]; setStick(t.clientX-(rect.left+60), t.clientY-(rect.top+60)); }, {passive:false});
+joystick.addEventListener('touchmove', e=>{ e.preventDefault(); if(!joyActive) return; const rect=joystick.getBoundingClientRect(); const t=e.touches[0]; setStick(t.clientX-(rect.left+60), t.clientY-(rect.top+60)); }, {passive:false});
+joystick.addEventListener('touchend', e=>{ e.preventDefault(); joyActive=false; joyX=0; joyY=0; stick.style.transform='translate(0,0)'; }, {passive:false});
+joystick.addEventListener('mousedown', e=>{ joyActive=true; const rect=joystick.getBoundingClientRect(); setStick(e.clientX-(rect.left+60), e.clientY-(rect.top+60)); });
+window.addEventListener('mousemove', e=>{ if(!joyActive|| e.buttons===0) return; const rect=joystick.getBoundingClientRect(); setStick(e.clientX-(rect.left+60), e.clientY-(rect.top+60)); });
+window.addEventListener('mouseup', ()=>{ if(joyActive){ joyActive=false; joyX=0; joyY=0; stick.style.transform='translate(0,0)'; }});
+sprintBtn.addEventListener('touchstart', e=>{ e.preventDefault(); sprintHeld=true; }, {passive:false});
+sprintBtn.addEventListener('touchend', e=>{ e.preventDefault(); sprintHeld=false; }, {passive:false});
+sprintBtn.addEventListener('mousedown', ()=> sprintHeld=true);
+sprintBtn.addEventListener('mouseup', ()=> sprintHeld=false);
+flashBtn.addEventListener('click', ()=>{ flashOn=!flashOn; flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12; if(flashlightModel) flashlightModel.visible=flashOn; });
+flashBtn.addEventListener('touchstart', e=>{ e.preventDefault(); flashOn=!flashOn; flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12; if(flashlightModel) flashlightModel.visible=flashOn; }, {passive:false});
 function tryLock(){ try{ controls.lock(); } catch(e){ console.error(e); overlay.style.display='none'; } }
 startBtn.addEventListener('click', e=>{ e.stopPropagation(); tryLock(); stopOpening(); startMusic(); });
 overlay.addEventListener('click', e=>{ if(e.target===overlay) tryLock(); });
@@ -73,8 +114,8 @@ function setMode(light){
 }
 modeDark.onclick=()=> setMode(false);
 modeLight.onclick=()=> setMode(true);
-controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden'); stopOpening(); if(!musicStarted) startMusic(); if(!gameStartTime) gameStartTime=performance.now(); });
-controls.addEventListener('unlock', () => { if(!gameEnded && settingsPanel.classList.contains('hidden')){ overlay.style.display='flex'; bgm.pause(); startOpening(); } });
+controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden'); stopOpening(); if(!musicStarted) startMusic(); if(!gameStartTime) gameStartTime=performance.now(); if(isMobile) mobileControls.classList.remove('hidden'); });
+controls.addEventListener('unlock', () => { if(!gameEnded && settingsPanel.classList.contains('hidden')){ overlay.style.display='flex'; bgm.pause(); startOpening(); } mobileControls.classList.add('hidden'); });
 document.addEventListener('click', ()=>{ if(overlay.style.display==='none' && !controls.isLocked && !gameEnded && settingsPanel.classList.contains('hidden')) tryLock(); });
 
 // --- KORKU EVI TEMALI DOKULAR ---
@@ -465,8 +506,9 @@ function tryMoveEntity(pos, target, speed, dt){
 }
 
 function updateStamina(dt){
-  const moving = keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD'];
-  const wantSprint = (keys['ShiftLeft']||keys['ShiftRight']) && moving && canSprint && stamina>0;
+  const joyMoving = Math.hypot(joyX, joyY) > 0.12;
+  const moving = keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD'] || joyMoving;
+  const wantSprint = ((keys['ShiftLeft']||keys['ShiftRight']) || sprintHeld) && moving && canSprint && stamina>0;
   if(wantSprint){ stamina=Math.max(0, stamina - 28*dt); if(stamina<=0){ stamina=0; canSprint=false; } }
   else { stamina=Math.min(100, stamina + 18*dt); if(stamina>22) canSprint=true; }
   const pct=Math.round(stamina); staminaBar.style.width=pct+'%'; staminaVal.textContent=pct+'%'; staminaBar.classList.toggle('low', stamina<28); return wantSprint;
@@ -478,16 +520,53 @@ function move(dt){
   const forward=new THREE.Vector3(), right=new THREE.Vector3();
   camera.getWorldDirection(forward); forward.y=0; forward.normalize();
   right.crossVectors(forward, new THREE.Vector3(0,1,0));
-  // manuel delta hesapla
   let dx=0, dz=0;
   if(keys['KeyW']){ dx+=forward.x*speed; dz+=forward.z*speed; }
   if(keys['KeyS']){ dx-=forward.x*speed; dz-=forward.z*speed; }
   if(keys['KeyA']){ dx-=right.x*speed; dz-=right.z*speed; }
   if(keys['KeyD']){ dx+=right.x*speed; dz+=right.z*speed; }
+  // joystick
+  if(Math.hypot(joyX, joyY) > 0.12){
+    // joyY negatif = ileri
+    const jF = -joyY; const jR = joyX;
+    dx += (forward.x * jF + right.x * jR) * speed;
+    dz += (forward.z * jF + right.z * jR) * speed;
+  }
   const next=new THREE.Vector3(old.x+dx, old.y, old.z+dz);
   tryMove(old, next);
   controls.getObject().position.copy(old);
 }
+// mobil kamera bakis - sag taraf surukle
+let lookTouchId=null, lastLookX=0, lastLookY=0;
+renderer.domElement.addEventListener('touchstart', e=>{
+  if(!isMobile || !controls.isLocked) return;
+  for(const t of e.touches){
+    const rect=joystick.getBoundingClientRect();
+    const inJoy = t.clientX>=rect.left && t.clientX<=rect.right && t.clientY>=rect.top && t.clientY<=rect.bottom;
+    if(inJoy) continue;
+    // sprint/flash butonlarinda degilse look
+    if(t.target===sprintBtn || t.target===flashBtn) continue;
+    if(t.clientX > window.innerWidth*0.5){ lookTouchId=t.identifier; lastLookX=t.clientX; lastLookY=t.clientY; break; }
+  }
+}, {passive:false});
+renderer.domElement.addEventListener('touchmove', e=>{
+  if(lookTouchId===null) return;
+  for(const t of e.touches){ if(t.identifier===lookTouchId){
+    const dx=t.clientX-lastLookX, dy=t.clientY-lastLookY;
+    camera.rotation.y -= dx*0.004;
+    camera.rotation.x -= dy*0.004;
+    camera.rotation.x=Math.max(-1.2, Math.min(1.2, camera.rotation.x));
+    // controls objesini de guncelle
+    controls.getObject().rotation.y = camera.rotation.y;
+    lastLookX=t.clientX; lastLookY=t.clientY; break;
+  }}
+}, {passive:false});
+renderer.domElement.addEventListener('touchend', e=>{
+  if(lookTouchId!==null){
+    let found=false; for(const t of e.touches) if(t.identifier===lookTouchId) found=true;
+    if(!found) lookTouchId=null;
+  }
+});
 
 function updatePickups(dt){
   pickups.forEach(g=>{

@@ -35,10 +35,14 @@
     <div class="creepy-badges">
       <span>🔋 40 pil</span><span>🏚️ 4 odacık</span><span>👹 Joker 1.70m</span><span>🐕 Örümcek</span>
     </div>
-    <p id="overlayText" class="overlay-text">Pil bitmeden 40 pili topla, 4 odacığı ara, masa-sandalyelerin arasından sıyrıl ve <strong>çıkış kapısını</strong> bul.</p>
+     <p id="overlayText" class="overlay-text">Pil bitmeden 40 pili topla, 4 odacığı ara, masa-sandalyelerin arasından sıyrıl ve <strong>çıkış kapısını</strong> bul.</p>
     <button id="startBtn" class="creepy-btn"><span class="btn-glow"></span> ▶ OYNA — KORKUYOR MUSUN?</button>
     <p class="sub creepy-sub2">WASD hareket • SHIFT koş (stamina) • F fener • Duvarlardan geçemezsin</p>
-    <button id="settingsBtn" title="Ayarlar">⚙️ Ayarlar</button>
+    <div class="overlay-actions">
+      <button id="settingsBtn" title="Ayarlar">⚙️ Ayarlar</button>
+      <button id="platformBtn" title="Mobil/PC değiştir">📱 Mobil / PC</button>
+    </div>
+    <p id="platformHint" class="platform-hint">🖥️ PC sürüm aktif</p>
   </div>
   <div class="eyes"><span>👁️</span><span>👁️</span></div>
 </div>
@@ -74,6 +78,14 @@
   </div>
 </div>
 <div id="spiderAlert" class="hidden">🕷️ ÖRÜMCEK GELDİ! 🕷️</div>
+<div id="mobileControls" class="hidden">
+  <div id="joystick"><div id="stick"></div></div>
+  <div id="mobileBtns">
+    <button id="sprintBtn">🏃 KOŞ</button>
+    <button id="flashBtn">🔦 FENER</button>
+  </div>
+</div>
+<p id="activePlatform" class="active-platform">🖥️ PC sürüm aktif</p>
 <div id="loading">Yükleniyor...</div>
 <audio id="bgmOpening" src="assets/opening.mp3" loop preload="auto"></audio>
 <audio id="bgm" src="assets/horror.mp3" loop preload="auto"></audio>
