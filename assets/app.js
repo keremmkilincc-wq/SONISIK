@@ -247,8 +247,8 @@ mtlLoader.load('assets/models/joker.mtl', (mtl)=>{
   mtl.preload();
   objLoader.setMaterials(mtl);
   objLoader.load('assets/models/joker.obj', (obj)=>{
-    obj.scale.set(0.055,0.055,0.055);
-    obj.position.set(0,-0.55,0);
+    obj.scale.set(0.75,0.75,0.75);
+    obj.position.set(0,0,0);
     obj.rotation.y=Math.PI;
     obj.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; }});
     creature.remove(placeholder); creature.remove(phHead);
