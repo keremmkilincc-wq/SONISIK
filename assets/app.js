@@ -330,12 +330,38 @@ const jokerTex=textureLoader.load('assets/models/joker.png');
 let creatureState='patrol'; let patrolTarget=new THREE.Vector3((Math.random()-0.5)*50,0,(Math.random()-0.5)*50); let fleeUntil=0;
 
 const pet=new THREE.Group();
-const pBody=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.65,0.35), new THREE.MeshStandardMaterial({color:0x1a0a0a})); pBody.position.y=0.62;
-const pHead=new THREE.Mesh(new THREE.SphereGeometry(0.23,12,10), new THREE.MeshStandardMaterial({color:0x1a0a0a})); pHead.position.set(0,1.05,0.05);
-const pEyeMat=new THREE.MeshStandardMaterial({color:0xffaa00, emissive:0xff6a00, emissiveIntensity:3});
-const pEye1=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,8), pEyeMat); pEye1.position.set(-0.09,1.07,0.18); const pEye2=pEye1.clone(); pEye2.position.x=0.09;
-const pLight=new THREE.PointLight(0xff6a00, 2.8, 6); pLight.position.set(0,0.7,0);
-pet.add(pBody,pHead,pEye1,pEye2,pLight); pet.position.set(1.5,0,-41); pet.visible=false; scene.add(pet);
+let spiderMesh=null; let spiderMixer=null;
+const pLight=new THREE.PointLight(0xff6600, 2.6, 7); pLight.position.set(0,0.5,0); pet.add(pLight);
+pet.position.set(1.5,0,-41); pet.visible=false; scene.add(pet);
+// orumcek yukle (OBJ + MTL, FBX alternatif)
+const spiderMtlLoader=new MTLLoader();
+spiderMtlLoader.setPath('assets/models/spider/');
+spiderMtlLoader.load('spider.mtl', (mtl)=>{
+  mtl.preload();
+  const spiderObjLoader=new OBJLoader();
+  spiderObjLoader.setMaterials(mtl);
+  spiderObjLoader.setPath('assets/models/spider/');
+  spiderObjLoader.load('spider.obj', (obj)=>{
+    obj.scale.set(0.018,0.018,0.018);
+    obj.position.set(0,0.35,0);
+    obj.rotation.y=Math.PI;
+    obj.traverse(c=>{ if(c.isMesh){ c.castShadow=false; c.receiveShadow=false; }});
+    pet.add(obj); spiderMesh=obj;
+  }, undefined, ()=> console.log('spider obj fail'));
+}, undefined, ()=> console.log('spider mtl fail'));
+// yedek FBX dene
+const spiderFbxLoader=new FBXLoader();
+spiderFbxLoader.load('assets/models/spider/spider.fbx', (fbx)=>{
+  if(spiderMesh) return;
+  fbx.scale.set(0.014,0.014,0.014);
+  fbx.position.set(0,0.3,0);
+  fbx.traverse(c=>{ if(c.isMesh){ c.castShadow=false; }});
+  if(!spiderMesh){ pet.add(fbx); spiderMesh=fbx; }
+  if(fbx.animations && fbx.animations.length>0){
+    spiderMixer=new THREE.AnimationMixer(fbx);
+    spiderMixer.clipAction(fbx.animations[0]).play();
+  }
+}, undefined, ()=>{});
 let petState='sleep'; let petFleeUntil=0;
 
 let battery=100, flashOn=true, collected=0, gameEnded=false;
@@ -446,7 +472,7 @@ function updateCreature(dt, now){
   if(hDistCre<1.15 && !gameEnded) endGame(false);
 }
 function updatePet(dt, now){
-  if(collected<10){ if(pet.visible) pet.visible=false; petState='sleep'; pBody.position.y=0.62 + Math.sin(now*0.002)*0.04; return; }
+  if(collected<10){ if(pet.visible) pet.visible=false; petState='sleep'; if(spiderMesh) spiderMesh.position.y=0.35 + Math.sin(now*0.002)*0.04; return; }
   if(!pet.visible){ pet.visible=true; petFleeUntil=now+400; }
   const playerPos=controls.getObject().position, pPos=pet.position, dist=pPos.distanceTo(playerPos);
   let inLight=false;
@@ -455,15 +481,18 @@ function updatePet(dt, now){
   else if(now>petFleeUntil){ const moving=keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']; if(dist<16 && (moving || !flashOn)) petState='chase'; else petState='patrol'; }
   else petState='flee';
   let speed, target;
-  if(petState==='flee'){ const away=new THREE.Vector3().subVectors(pPos, playerPos).normalize().multiplyScalar(6); target=new THREE.Vector3().addVectors(pPos, away); speed=4.2; }
-  else if(petState==='chase'){ target=playerPos.clone(); speed=4.0; }
-  else { target=new THREE.Vector3().copy(patrolTarget); speed=1.4; if(pPos.distanceTo(patrolTarget)<1.2) patrolTarget.set((Math.random()-0.5)*46,0,(Math.random()-0.5)*46); }
+  if(petState==='flee'){ const away=new THREE.Vector3().subVectors(pPos, playerPos).normalize().multiplyScalar(6); target=new THREE.Vector3().addVectors(pPos, away); speed=4.5; }
+  else if(petState==='chase'){ target=playerPos.clone(); speed=4.3; }
+  else { target=new THREE.Vector3().copy(patrolTarget); speed=1.6; if(pPos.distanceTo(patrolTarget)<1.2) patrolTarget.set((Math.random()-0.5)*46,0,(Math.random()-0.5)*46); }
   if(target){ const moved=tryMoveEntity(pPos, target, speed, dt); if(moved){ const ang=Math.atan2(target.x - pPos.x, target.z - pPos.z); pet.rotation.y = ang; } }
-  // pet yurume
-  pBody.rotation.z = Math.sin(now*0.016)*0.18;
-  pBody.position.y=0.62 + Math.abs(Math.sin(now*0.016))*0.12;
+  if(spiderMixer) spiderMixer.update(dt);
+  if(spiderMesh){
+    const s = petState==='chase'? 0.022 : 0.010;
+    spiderMesh.position.y = 0.35 + Math.abs(Math.sin(now*s*1.8))*0.14;
+    spiderMesh.rotation.z = Math.sin(now*s)*0.10;
+  }
   const hDistPet = Math.hypot(pPos.x - playerPos.x, pPos.z - playerPos.z);
-  if(hDistPet<0.95 && !gameEnded) endGame(false);
+  if(hDistPet<1.05 && !gameEnded) endGame(false);
 }
 function checkWin(){
   if(collected>=40 && controls.getObject().position.distanceTo(doorFrame.position)<2.8) endGame(true);
