@@ -228,7 +228,8 @@ function updateCreature(dt, now){
   cBody.position.y=1.0 + Math.sin(now*0.006)*(creatureState==='chase'?0.11:0.04);
   // light flicker when close
   if(dist<6 && creatureState==='chase' && Math.random()<0.04) cLight.intensity=Math.random()*4+1;
-  if(dist<1.35 && !gameEnded) endGame(false);
+  const hDistCre = Math.hypot(cPos.x - playerPos.x, cPos.z - playerPos.z);
+  if(hDistCre<1.05 && !gameEnded) endGame(false);
 }
 function updatePet(dt, now){
   if(collected<10){
@@ -261,7 +262,8 @@ function updatePet(dt, now){
 
   if(target){ const dir=new THREE.Vector3().subVectors(target,pPos); dir.y=0; const len=dir.length(); if(len>0.01){ dir.normalize().multiplyScalar(speed*dt); pPos.add(dir); if(len>0.05) pet.lookAt(target.x, pPos.y, target.z); } }
   pBody.position.y=0.62 + Math.sin(now*0.008)*(petState==='chase'?0.09:0.03);
-  if(dist<1.1 && !gameEnded) endGame(false);
+  const hDistPet = Math.hypot(pPos.x - playerPos.x, pPos.z - playerPos.z);
+  if(hDistPet<0.95 && !gameEnded) endGame(false);
 }
 function checkWin(){
   if(collected>=15 && controls.getObject().position.distanceTo(doorFrame.position)<2.6) endGame(true);
