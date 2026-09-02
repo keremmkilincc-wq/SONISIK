@@ -253,8 +253,8 @@ const jokerTex=textureLoader.load('assets/models/joker.png');
     mtl.preload();
     objLoader.setMaterials(mtl);
     objLoader.load('assets/models/joker.obj', (obj)=>{
-      obj.scale.set(0.38,0.38,0.38);
-      obj.position.set(0,0.15,0);
+      obj.scale.set(0.48,0.48,0.48);
+      obj.position.set(0,0.12,0);
       obj.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; }});
       creature.remove(placeholder); creature.remove(phHead);
       creature.add(obj); jokerMesh=obj;
@@ -364,8 +364,7 @@ function updateCreature(dt, now){
     const moved=tryMoveEntity(cPos, target, speed, dt);
     if(moved){
       const ang=Math.atan2(target.x - cPos.x, target.z - cPos.z);
-      // duzelt: model -Z bakiyor, o yuzden PI ekle
-      creature.rotation.y = ang + Math.PI;
+      creature.rotation.y = ang;
     }
   }
   // yurume animasyonu
@@ -393,7 +392,7 @@ function updatePet(dt, now){
   if(petState==='flee'){ const away=new THREE.Vector3().subVectors(pPos, playerPos).normalize().multiplyScalar(6); target=new THREE.Vector3().addVectors(pPos, away); speed=4.2; }
   else if(petState==='chase'){ target=playerPos.clone(); speed=4.0; }
   else { target=new THREE.Vector3().copy(patrolTarget); speed=1.4; if(pPos.distanceTo(patrolTarget)<1.2) patrolTarget.set((Math.random()-0.5)*46,0,(Math.random()-0.5)*46); }
-  if(target){ const moved=tryMoveEntity(pPos, target, speed, dt); if(moved){ const ang=Math.atan2(target.x - pPos.x, target.z - pPos.z); pet.rotation.y = ang + Math.PI; } }
+  if(target){ const moved=tryMoveEntity(pPos, target, speed, dt); if(moved){ const ang=Math.atan2(target.x - pPos.x, target.z - pPos.z); pet.rotation.y = ang; } }
   // pet yurume
   pBody.rotation.z = Math.sin(now*0.016)*0.18;
   pBody.position.y=0.62 + Math.abs(Math.sin(now*0.016))*0.12;
