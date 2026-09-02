@@ -253,8 +253,8 @@ const jokerTex=textureLoader.load('assets/models/joker.png');
     mtl.preload();
     objLoader.setMaterials(mtl);
     objLoader.load('assets/models/joker.obj', (obj)=>{
-      obj.scale.set(0.48,0.48,0.48);
-      obj.position.set(0,0.12,0);
+      obj.scale.set(0.705,0.705,0.705);
+      obj.position.set(0,0,0);
       obj.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; }});
       creature.remove(placeholder); creature.remove(phHead);
       creature.add(obj); jokerMesh=obj;
