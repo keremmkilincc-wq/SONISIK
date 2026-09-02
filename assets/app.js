@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
 
 const overlay = document.getElementById('overlay');
 const gameOverEl = document.getElementById('gameOver');
@@ -244,38 +244,23 @@ creature.position.set(6,0,-6); scene.add(creature);
 // placeholder kutu silinecek, joker gelince gizle
 const placeholder = new THREE.Mesh(new THREE.BoxGeometry(0.7,1.2,0.45), new THREE.MeshStandardMaterial({color:0x050507})); placeholder.position.y=1.0; creature.add(placeholder);
 const phHead=new THREE.Mesh(new THREE.SphereGeometry(0.33,12,10), new THREE.MeshStandardMaterial({color:0x111111})); phHead.position.set(0,1.82,0.08); creature.add(phHead);
-let mixer=null, jokerMixer=null;
-const fbxLoader=new FBXLoader();
-// FBX dene (animasyonlu), olmazsa OBJ fallback
-fbxLoader.load('assets/models/joker.fbx', (fbx)=>{
-  fbx.scale.set(0.009,0.009,0.009);
-  fbx.position.set(0,-0.05,0);
-  // FBX genelde -90 derece yatik gelir, duzelt
-  fbx.rotation.y=Math.PI;
-  fbx.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; }});
-  creature.remove(placeholder); creature.remove(phHead);
-  creature.add(fbx); jokerMesh=fbx;
-  if(fbx.animations && fbx.animations.length>0){
-    jokerMixer=new THREE.AnimationMixer(fbx);
-    const act=jokerMixer.clipAction(fbx.animations[0]); act.play();
-  }
-  loadingEl.textContent='Joker (FBX) yüklendi';
-  setTimeout(()=> loadingEl.classList.add('hidden'),400);
-}, undefined, ()=>{
+let jokerMixer=null;
+// direkt OBJ - FBX kutu yapiyor diye iptal
+const textureLoader=new THREE.TextureLoader();
+const jokerTex=textureLoader.load('assets/models/joker.png');
   // fallback OBJ
   mtlLoader.load('assets/models/joker.mtl', (mtl)=>{
     mtl.preload();
     objLoader.setMaterials(mtl);
     objLoader.load('assets/models/joker.obj', (obj)=>{
-      obj.scale.set(0.75,0.75,0.75);
-      obj.position.set(0,0,0);
+      obj.scale.set(0.38,0.38,0.38);
+      obj.position.set(0,0.15,0);
       obj.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; }});
       creature.remove(placeholder); creature.remove(phHead);
       creature.add(obj); jokerMesh=obj;
       jokerMesh.userData.baseY=0;
     });
   });
-});
 let creatureState='patrol'; let patrolTarget=new THREE.Vector3((Math.random()-0.5)*50,0,(Math.random()-0.5)*50); let fleeUntil=0;
 
 const pet=new THREE.Group();
