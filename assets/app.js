@@ -31,9 +31,10 @@ scene.background = new THREE.Color(0x0a0505);
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 100);
 camera.position.set(0, 1.7, 10);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = false; // kasma icin kapatildi, gerekirse acilir
 document.body.appendChild(renderer.domElement);
 
 const controls = new PointerLockControls(camera, renderer.domElement);
@@ -109,39 +110,36 @@ let isLightMode = localStorage.getItem('sonisik_mode')==='light';
 let ceilingLights=[];
 const flashlight = new THREE.SpotLight(0xfff6cc, 70, 22, Math.PI/6, 0.4, 1.2);
 flashlight.position.set(0.35, -0.35, -0.1);
-flashlight.castShadow = true; flashlight.shadow.mapSize.set(1024,1024);
+flashlight.castShadow = false;
 flashlight.target.position.set(0, -0.2, -1);
 camera.add(flashlight); camera.add(flashlight.target); scene.add(camera);
 const playerFill = new THREE.PointLight(0x442222, 0.5, 5); playerFill.position.set(0,0,0); camera.add(playerFill);
-// tavan titreyen isiklar korku evi
+// tavan titreyen isiklar - azaltildi kasma icin 4->2
 const flickerLights=[];
-for(let i=0;i<4;i++){
-  const pl=new THREE.PointLight(0xff4400, 0, 18);
-  pl.position.set((Math.random()-0.5)*60, 4.5, (Math.random()-0.5)*60);
+for(let i=0;i<2;i++){
+  const pl=new THREE.PointLight(0xff4400, 0.7, 16);
+  pl.position.set((Math.random()-0.5)*50, 4.2, (Math.random()-0.5)*50);
   scene.add(pl); flickerLights.push(pl);
 }
-// aydinlik mod tavan isiklari
-for(let x=-30;x<=30;x+=15){
-  for(let z=-30;z<=30;z+=15){
-    const cl=new THREE.PointLight(0xfff2cc, 0, 28); cl.position.set(x,4.2,z); scene.add(cl); ceilingLights.push(cl);
-  }
-}
+// aydinlik mod - pointLight yerine tek hemiLight
+const hemiLight=new THREE.HemisphereLight(0xfff2cc, 0x222222, 0);
+scene.add(hemiLight);
 function applyMode(){
   if(isLightMode){
     ambientLight.color.set(0xffffff); ambientLight.intensity=0.85;
+    hemiLight.intensity=0.9;
     scene.background=new THREE.Color(0xd6c7a8);
     scene.fog=new THREE.Fog(0xd6c7a8, 18, 55);
     flashlight.intensity=0; playerFill.intensity=0.1;
-    ceilingLights.forEach(l=> l.intensity=1.7);
     flickerLights.forEach(l=> l.intensity=0);
-    floor.material.color.set(0xffffff); floor.material.map=null;
+    floor.material.color.set(0xffffff);
     if(flashlightModel) flashlightModel.visible=false;
   } else {
     ambientLight.color.set(0x301010); ambientLight.intensity=0.22;
+    hemiLight.intensity=0;
     scene.background=new THREE.Color(0x0a0505);
     scene.fog=new THREE.Fog(0x0a0505, 12, 42);
     flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12;
-    ceilingLights.forEach(l=> l.intensity=0);
     // flicker geri gelecek animate ile
     if(flashlightModel) flashlightModel.visible=flashOn;
   }
@@ -151,18 +149,18 @@ setTimeout(()=>{ modeDark.classList.toggle('active', !isLightMode); modeLight.cl
 
 // floor korku evi
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(90,90), new THREE.MeshStandardMaterial({map:woodTex, roughness:0.85, metalness:0.05}));
-floor.rotation.x = -Math.PI/2; floor.receiveShadow=true; floor.position.y=0.01; scene.add(floor);
+floor.rotation.x = -Math.PI/2; floor.receiveShadow=false; floor.position.y=0.01; scene.add(floor);
 // halilar
 for(let i=0;i<6;i++){
   const rug=new THREE.Mesh(new THREE.PlaneGeometry(6+Math.random()*4, 4+Math.random()*3), new THREE.MeshStandardMaterial({color:0x4a1010, roughness:1}));
-  rug.rotation.x=-Math.PI/2; rug.position.set((Math.random()-0.5)*50,0.02,(Math.random()-0.5)*50); rug.receiveShadow=true; scene.add(rug);
+  rug.rotation.x=-Math.PI/2; rug.position.set((Math.random()-0.5)*50,0.02,(Math.random()-0.5)*50); rug.receiveShadow=false; scene.add(rug);
 }
 
 const wallMat = new THREE.MeshStandardMaterial({map:wallTex, roughness:0.9, color:0xdddddd});
 const colliders=[]; // duvar + engel kutulari
 function wall(w,h,x,y,z,ry=0){
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,0.4), wallMat);
-  m.position.set(x,y,z); m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m);
+  m.position.set(x,y,z); m.rotation.y=ry; m.castShadow=false; m.receiveShadow=false; scene.add(m);
   // collider AABB
   const halfW = (ry===0? w:0.4)/2, halfD=(ry===0?0.4:w)/2;
   colliders.push({ minX:x-halfW-0.45, maxX:x+halfW+0.45, minZ:z-halfD-0.45, maxZ:z+halfD+0.45 });
@@ -171,19 +169,15 @@ function wall(w,h,x,y,z,ry=0){
 wall(90,5,0,2.5,-45); wall(90,5,0,2.5,45); wall(90,5,-45,2.5,0,Math.PI/2); wall(90,5,45,2.5,0,Math.PI/2);
 
 const crateBoxes=[];
-for(let i=0;i<34;i++){
+for(let i=0;i<24;i++){
   const sx=0.9+Math.random()*1.4, sy=1+Math.random()*1.6, sz=0.9+Math.random()*1.4;
   const mat = i%3===0 ? new THREE.MeshStandardMaterial({map:crateTex}) : (i%3===1? new THREE.MeshStandardMaterial({color:0x3a2518, roughness:0.9}) : wallMat);
   const b=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), mat);
   b.position.set((Math.random()-0.5)*78, sy/2, (Math.random()-0.5)*78);
   if(b.position.distanceTo(new THREE.Vector3(0,0,10))<6) b.position.z+=10;
-  b.castShadow=true; b.receiveShadow=true; scene.add(b);
+  b.castShadow=false; b.receiveShadow=false; scene.add(b);
   colliders.push({ minX:b.position.x-sx/2-0.45, maxX:b.position.x+sx/2+0.45, minZ:b.position.z-sz/2-0.45, maxZ:b.position.z+sz/2+0.45 });
   crateBoxes.push(b);
-  // ustune mum isigi arada
-  if(Math.random()<0.25){
-    const cLight=new THREE.PointLight(0xff6600, 1.2, 6); cLight.position.set(b.position.x, sy+0.3, b.position.z); scene.add(cLight);
-  }
 }
 
 const doorMat = new THREE.MeshStandardMaterial({color:0x7f1d1d, emissive:0x450a0a, emissiveIntensity:0.8});
@@ -201,12 +195,12 @@ function openDoor(){
 const pickups=[]; const pickupGroup=new THREE.Group(); scene.add(pickupGroup);
 function spawnBattery(x,z){
   const g=new THREE.Group();
-  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.24,0.52,12), new THREE.MeshStandardMaterial({color:0xfacc15, emissive:0xb45309, emissiveIntensity:0.65, roughness:0.4}));
-  body.castShadow=true;
-  const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.09,12), new THREE.MeshStandardMaterial({color:0x1f2937})); cap.position.y=0.29; body.add(cap);
-  const light=new THREE.PointLight(0xfacc15, 2.4, 6); light.position.y=0.3;
-  const ring=new THREE.Mesh(new THREE.RingGeometry(0.35,0.42,16), new THREE.MeshBasicMaterial({color:0xfacc15, side:THREE.DoubleSide, transparent:true, opacity:0.35})); ring.rotation.x=Math.PI/2; ring.position.y=-0.1;
-  g.add(body,light,ring); g.position.set(x,0.48,z); g.userData={ collected:false, baseY:0.48, t:Math.random()*6 }; pickupGroup.add(g); pickups.push(g);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.24,0.52,10), new THREE.MeshStandardMaterial({color:0xfacc15, emissive:0xb45309, emissiveIntensity:0.65, roughness:0.4}));
+  body.castShadow=false;
+  const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.09,10), new THREE.MeshStandardMaterial({color:0x1f2937})); cap.position.y=0.29; body.add(cap);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(0.35,0.42,12), new THREE.MeshBasicMaterial({color:0xfacc15, side:THREE.DoubleSide, transparent:true, opacity:0.35})); ring.rotation.x=Math.PI/2; ring.position.y=-0.1;
+  // isik sadece yakinda acilacak, simdi kapali
+  g.add(body,ring); g.position.set(x,0.48,z); g.userData={ collected:false, baseY:0.48, t:Math.random()*6 }; pickupGroup.add(g); pickups.push(g);
 }
 [
  [-42,-42],[42,-42],[-42,42],[42,42],[0,-38],[-20,34],[22,36],[-36,-18],[36,-20],[-38,10],
@@ -225,8 +219,8 @@ mtlLoader.load('assets/models/flashlight.mtl', (mtl)=>{
     obj.scale.set(0.12,0.12,0.12);
     obj.position.set(0.35,-0.38,-0.55);
     obj.rotation.set(0, Math.PI, 0);
-    obj.traverse(c=>{ if(c.isMesh){ c.castShadow=true; }});
-    camera.add(obj); flashlightModel=obj;
+    obj.traverse(c=>{ if(c.isMesh){ c.castShadow=false; }});
+      camera.add(obj); flashlightModel=obj;
     loadingEl.textContent='El feneri yüklendi';
     setTimeout(()=> loadingEl.classList.add('hidden'), 600);
   }, undefined, ()=>{ loadingEl.classList.add('hidden'); });
@@ -255,7 +249,7 @@ const jokerTex=textureLoader.load('assets/models/joker.png');
     objLoader.load('assets/models/joker.obj', (obj)=>{
       obj.scale.set(0.705,0.705,0.705);
       obj.position.set(0,0,0);
-      obj.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; }});
+      obj.traverse(c=>{ if(c.isMesh){ c.castShadow=false; c.receiveShadow=false; }});
       creature.remove(placeholder); creature.remove(phHead);
       creature.add(obj); jokerMesh=obj;
       jokerMesh.userData.baseY=0;
