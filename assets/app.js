@@ -17,6 +17,11 @@ const restartBtn = document.getElementById('restartBtn');
 const bgm = document.getElementById('bgm');
 const muteBtn = document.getElementById('muteBtn');
 const loadingEl = document.getElementById('loading');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+const modeDark = document.getElementById('modeDark');
+const modeLight = document.getElementById('modeLight');
+const closeSettings = document.getElementById('closeSettings');
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x1a0a0a, 12, 42);
@@ -40,9 +45,20 @@ startBtn.addEventListener('click', e=>{ e.stopPropagation(); tryLock(); startMus
 overlay.addEventListener('click', e=>{ if(e.target===overlay) tryLock(); });
 restartBtn.onclick = () => location.reload();
 muteBtn.onclick = async ()=>{ bgm.muted=!bgm.muted; muteBtn.textContent=bgm.muted?'🔇':'🔊'; muteBtn.classList.toggle('muted', bgm.muted); if(!musicStarted && !bgm.muted) await startMusic(); };
-controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); if(!musicStarted) startMusic(); });
-controls.addEventListener('unlock', () => { if(!gameEnded) overlay.style.display='flex'; });
-document.addEventListener('click', ()=>{ if(overlay.style.display==='none' && !controls.isLocked && !gameEnded) tryLock(); });
+settingsBtn.onclick = ()=> settingsPanel.classList.remove('hidden');
+closeSettings.onclick = ()=> settingsPanel.classList.add('hidden');
+settingsPanel.addEventListener('click', e=>{ if(e.target===settingsPanel) settingsPanel.classList.add('hidden'); });
+function setMode(light){
+  isLightMode=light;
+  localStorage.setItem('sonisik_mode', light?'light':'dark');
+  modeDark.classList.toggle('active', !light); modeLight.classList.toggle('active', light);
+  applyMode();
+}
+modeDark.onclick=()=> setMode(false);
+modeLight.onclick=()=> setMode(true);
+controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden'); if(!musicStarted) startMusic(); });
+controls.addEventListener('unlock', () => { if(!gameEnded && settingsPanel.classList.contains('hidden')) overlay.style.display='flex'; });
+document.addEventListener('click', ()=>{ if(overlay.style.display==='none' && !controls.isLocked && !gameEnded && settingsPanel.classList.contains('hidden')) tryLock(); });
 
 // --- KORKU EVI TEMALI DOKULAR ---
 function makeWoodTexture(){
@@ -87,7 +103,9 @@ const wallTex=makeWallTexture();
 const crateTex=makeCrateTexture();
 
 // lights
-scene.add(new THREE.AmbientLight(0x301010, 0.22));
+const ambientLight = new THREE.AmbientLight(0x301010, 0.22); scene.add(ambientLight);
+let isLightMode = localStorage.getItem('sonisik_mode')==='light';
+let ceilingLights=[];
 const flashlight = new THREE.SpotLight(0xfff6cc, 70, 22, Math.PI/6, 0.4, 1.2);
 flashlight.position.set(0.35, -0.35, -0.1);
 flashlight.castShadow = true; flashlight.shadow.mapSize.set(1024,1024);
@@ -101,6 +119,34 @@ for(let i=0;i<4;i++){
   pl.position.set((Math.random()-0.5)*60, 4.5, (Math.random()-0.5)*60);
   scene.add(pl); flickerLights.push(pl);
 }
+// aydinlik mod tavan isiklari
+for(let x=-30;x<=30;x+=15){
+  for(let z=-30;z<=30;z+=15){
+    const cl=new THREE.PointLight(0xfff2cc, 0, 28); cl.position.set(x,4.2,z); scene.add(cl); ceilingLights.push(cl);
+  }
+}
+function applyMode(){
+  if(isLightMode){
+    ambientLight.color.set(0xffffff); ambientLight.intensity=0.85;
+    scene.background=new THREE.Color(0xd6c7a8);
+    scene.fog=new THREE.Fog(0xd6c7a8, 18, 55);
+    flashlight.intensity=0; playerFill.intensity=0.1;
+    ceilingLights.forEach(l=> l.intensity=1.7);
+    flickerLights.forEach(l=> l.intensity=0);
+    floor.material.color.set(0xffffff); floor.material.map=null;
+    if(flashlightModel) flashlightModel.visible=false;
+  } else {
+    ambientLight.color.set(0x301010); ambientLight.intensity=0.22;
+    scene.background=new THREE.Color(0x0a0505);
+    scene.fog=new THREE.Fog(0x0a0505, 12, 42);
+    flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12;
+    ceilingLights.forEach(l=> l.intensity=0);
+    // flicker geri gelecek animate ile
+    if(flashlightModel) flashlightModel.visible=flashOn;
+  }
+}
+// ilk mod uygula
+setTimeout(()=>{ modeDark.classList.toggle('active', !isLightMode); modeLight.classList.toggle('active', isLightMode); applyMode(); }, 100);
 
 // floor korku evi
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(90,90), new THREE.MeshStandardMaterial({map:woodTex, roughness:0.85, metalness:0.05}));
