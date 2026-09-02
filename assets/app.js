@@ -272,7 +272,7 @@ function move(dt){
   const old=controls.getObject().position.clone();
   const forward=new THREE.Vector3(), right=new THREE.Vector3();
   camera.getWorldDirection(forward); forward.y=0; forward.normalize();
-  right.crossVectors(forward, new THREE.Vector3(0,1,0)).negate();
+  right.crossVectors(forward, new THREE.Vector3(0,1,0));
   // manuel delta hesapla
   let dx=0, dz=0;
   if(keys['KeyW']){ dx+=forward.x*speed; dz+=forward.z*speed; }
