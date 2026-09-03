@@ -97,6 +97,8 @@ function startGame(){
   overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden');
   stopOpening(); if(!musicStarted) startMusic(); if(!gameStartTime) gameStartTime=performance.now();
   if(isMobile){ mobileControls.classList.remove('hidden'); }
+  // kaybetme muzigini unlock et (autoplay engelini as)
+  try{ loseBgm.volume=0; loseBgm.play().then(()=>{ loseBgm.pause(); loseBgm.currentTime=0; loseBgm.volume=0.75; }).catch(()=>{ loseBgm.volume=0.75; }); }catch(e){}
 }
 function tryLock(){ try{ controls.lock(); } catch(e){ console.error(e); } }
 startBtn.addEventListener('click', e=>{
@@ -567,12 +569,12 @@ let lookTouchId=null, lastLookX=0, lastLookY=0;
 renderer.domElement.addEventListener('touchstart', e=>{
   if(!isMobile || !gameActive) return;
   for(const t of e.touches){
-    // joystick veya butonlarda ise bakma degil
-    if(t.target.closest && (t.target.closest('#joystick') || t.target.closest('#sprintBtn') || t.target.closest('#flashBtn'))) continue;
+    if(t.target.closest && (t.target.closest('#joystick') || t.target.closest('#sprintBtn') || t.target.closest('#flashBtn') || t.target.closest('#muteBtn'))) continue;
     const rect=joystick.getBoundingClientRect();
     const inJoy = t.clientX>=rect.left && t.clientX<=rect.right && t.clientY>=rect.top && t.clientY<=rect.bottom;
     if(inJoy) continue;
-    if(t.clientX > window.innerWidth*0.45){ lookTouchId=t.identifier; lastLookX=t.clientX; lastLookY=t.clientY; break; }
+    // sag yarida degilse bile bakisa izin ver (joystick disinda her yer)
+    lookTouchId=t.identifier; lastLookX=t.clientX; lastLookY=t.clientY; break;
   }
 }, {passive:false});
 renderer.domElement.addEventListener('touchmove', e=>{
@@ -580,9 +582,9 @@ renderer.domElement.addEventListener('touchmove', e=>{
   e.preventDefault();
   for(const t of e.touches){ if(t.identifier===lookTouchId){
     const dx=t.clientX-lastLookX, dy=t.clientY-lastLookY;
-    // daha yavas ve pitch dar - takla engellendi
-    controls.getObject().rotation.y -= dx*0.0016;
-    camera.rotation.x -= dy*0.0016;
+    // yanal bakis hizli, dikey yavas - takla engellendi
+    controls.getObject().rotation.y -= dx*0.0032;
+    camera.rotation.x -= dy*0.0018;
     camera.rotation.x=Math.max(-0.75, Math.min(0.75, camera.rotation.x));
     camera.rotation.y=0; camera.rotation.z=0;
     lastLookX=t.clientX; lastLookY=t.clientY; break;
@@ -675,10 +677,15 @@ function showSpiderAlert(){
   setTimeout(()=> spiderAlert.classList.add('hidden'), 5000);
 }
 function endGame(won){
-  gameEnded=true; controls.unlock(); gameOverEl.classList.remove('hidden'); gameOverEl.classList.toggle('win', won); gameOverEl.classList.toggle('lose', !won);
-  overlay.style.display='none'; bgm.pause(); bgmOpening.pause();
+  gameEnded=true; try{ controls.unlock(); }catch(e){}
+  gameOverEl.classList.remove('hidden'); gameOverEl.classList.toggle('win', won); gameOverEl.classList.toggle('lose', !won);
+  overlay.style.display='none'; bgm.pause(); bgmOpening.pause(); mobileControls.classList.add('hidden');
   if(!won){
-    loseBgm.currentTime=0; loseBgm.volume=0.75; loseBgm.play().catch(()=>{});
+    loseBgm.muted=false; loseBgm.volume=0.85; loseBgm.currentTime=0;
+    const p=loseBgm.play(); if(p) p.catch(()=>{ // autoplay engellenirse kullanici tikinda cal
+      const once=()=>{ loseBgm.play().catch(()=>{}); document.removeEventListener('click', once); };
+      document.addEventListener('click', once, {once:true});
+    });
   }
   const goIcon=document.getElementById('goIcon'), goSub=document.getElementById('goSub'), goStat1=document.getElementById('goStat1'), goStat2=document.getElementById('goStat2');
   const elapsed = gameStartTime ? Math.floor((performance.now()-gameStartTime)/1000) : 0;
