@@ -223,10 +223,11 @@ const doorWoodMat=new THREE.MeshStandardMaterial({map:doorTex, roughness:0.7});
 const ambientLight = new THREE.AmbientLight(0x301010, 0.22); scene.add(ambientLight);
 let isLightMode = localStorage.getItem('sonisik_mode')==='light';
 let ceilingLights=[];
-const flashlight = new THREE.SpotLight(0xfff6cc, 70, 22, Math.PI/6, 0.4, 1.2);
-flashlight.position.set(0.35, -0.35, -0.1);
+const flashlight = new THREE.SpotLight(0xfff6cc, 72, 24, Math.PI/6, 0.38, 1.1);
+// isik tam imlece (crosshair) ortali
+flashlight.position.set(0, -0.14, 0.18);
 flashlight.castShadow = false;
-flashlight.target.position.set(0, -0.2, -1);
+flashlight.target.position.set(0, -0.14, -20);
 camera.add(flashlight); camera.add(flashlight.target); scene.add(camera);
 const playerFill = new THREE.PointLight(0x442222, 0.5, 5); playerFill.position.set(0,0,0); camera.add(playerFill);
 // tavan titreyen isiklar - azaltildi kasma icin 4->2
@@ -411,9 +412,10 @@ mtlLoader.load('assets/models/flashlight.mtl', (mtl)=>{
   mtl.preload();
   objLoader.setMaterials(mtl);
   objLoader.load('assets/models/flashlight.obj', (obj)=>{
-    obj.scale.set(0.12,0.12,0.12);
-    obj.position.set(0.35,-0.38,-0.55);
-    obj.rotation.set(0, Math.PI, 0);
+    obj.scale.set(0.11,0.11,0.11);
+    // karakter duzgun tutsun - sag elde, hafif one egik
+    obj.position.set(0.32,-0.30,-0.42);
+    obj.rotation.set(0.18, Math.PI, 0);
     obj.traverse(c=>{ if(c.isMesh){ c.castShadow=false; }});
       camera.add(obj); flashlightModel=obj;
     loadingEl.textContent='El feneri yüklendi';
@@ -578,10 +580,11 @@ renderer.domElement.addEventListener('touchmove', e=>{
   e.preventDefault();
   for(const t of e.touches){ if(t.identifier===lookTouchId){
     const dx=t.clientX-lastLookX, dy=t.clientY-lastLookY;
-    // hassasiyet dusuruldu, pitch sinirlandi ki harita takla atmasin
-    controls.getObject().rotation.y -= dx*0.0022;
-    camera.rotation.x -= dy*0.0022;
-    camera.rotation.x=Math.max(-0.85, Math.min(0.85, camera.rotation.x));
+    // daha yavas ve pitch dar - takla engellendi
+    controls.getObject().rotation.y -= dx*0.0016;
+    camera.rotation.x -= dy*0.0016;
+    camera.rotation.x=Math.max(-0.75, Math.min(0.75, camera.rotation.x));
+    camera.rotation.y=0; camera.rotation.z=0;
     lastLookX=t.clientX; lastLookY=t.clientY; break;
   }}
 }, {passive:false});
