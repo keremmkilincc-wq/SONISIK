@@ -582,10 +582,10 @@ renderer.domElement.addEventListener('touchmove', e=>{
   e.preventDefault();
   for(const t of e.touches){ if(t.identifier===lookTouchId){
     const dx=t.clientX-lastLookX, dy=t.clientY-lastLookY;
-    // yanal bakis hizli, dikey yavas - takla engellendi
-    controls.getObject().rotation.y -= dx*0.0032;
-    camera.rotation.x -= dy*0.0018;
-    camera.rotation.x=Math.max(-0.75, Math.min(0.75, camera.rotation.x));
+    // yanal bakis cok hizli, dikey daha yavas - takla asla olmasin
+    controls.getObject().rotation.y -= dx*0.0045;
+    camera.rotation.x -= dy*0.0016;
+    camera.rotation.x=Math.max(-0.65, Math.min(0.65, camera.rotation.x));
     camera.rotation.y=0; camera.rotation.z=0;
     lastLookX=t.clientX; lastLookY=t.clientY; break;
   }}
