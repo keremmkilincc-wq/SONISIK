@@ -105,7 +105,12 @@ startBtn.addEventListener('click', e=>{
   else { tryLock(); }
 });
 overlay.addEventListener('click', e=>{ if(e.target===overlay && !isMobile) tryLock(); });
-restartBtn.onclick = () => location.reload();
+restartBtn.onclick = () => { 
+  // cache bust reload
+  try{ sessionStorage.clear(); }catch(e){}
+  location.href = location.href.split('?')[0] + '?r=' + Date.now();
+  setTimeout(()=> location.reload(), 100);
+};
 muteBtn.onclick = async ()=>{
   const openingActive = overlay.style.display!=='none' && !controls.isLocked;
   bgm.muted=!bgm.muted; bgmOpening.muted=bgm.muted; loseBgm.muted=bgm.muted;
@@ -415,8 +420,12 @@ mtlLoader.load('assets/models/flashlight.mtl', (mtl)=>{
     setTimeout(()=> loadingEl.classList.add('hidden'), 600);
   }, undefined, ()=>{ loadingEl.classList.add('hidden'); });
 }, undefined, ()=>{ loadingEl.classList.add('hidden'); });
-// fallback timeout
-setTimeout(()=> loadingEl.classList.add('hidden'), 3500);
+// fallback timeout - daha guvenli
+setTimeout(()=> loadingEl.classList.add('hidden'), 1200);
+window.addEventListener('load', ()=> setTimeout(()=> loadingEl.classList.add('hidden'), 600));
+document.addEventListener('DOMContentLoaded', ()=> setTimeout(()=> loadingEl.classList.add('hidden'), 900));
+window.addEventListener('pageshow', ()=> loadingEl.classList.add('hidden'));
+window.addEventListener('error', ()=> loadingEl.classList.add('hidden'));
 
 // --- CANAVAR JOKER MODEL ---
 const creature=new THREE.Group();
@@ -569,9 +578,10 @@ renderer.domElement.addEventListener('touchmove', e=>{
   e.preventDefault();
   for(const t of e.touches){ if(t.identifier===lookTouchId){
     const dx=t.clientX-lastLookX, dy=t.clientY-lastLookY;
-    controls.getObject().rotation.y -= dx*0.004;
-    camera.rotation.x -= dy*0.004;
-    camera.rotation.x=Math.max(-1.25, Math.min(1.25, camera.rotation.x));
+    // hassasiyet dusuruldu, pitch sinirlandi ki harita takla atmasin
+    controls.getObject().rotation.y -= dx*0.0022;
+    camera.rotation.x -= dy*0.0022;
+    camera.rotation.x=Math.max(-0.85, Math.min(0.85, camera.rotation.x));
     lastLookX=t.clientX; lastLookY=t.clientY; break;
   }}
 }, {passive:false});
