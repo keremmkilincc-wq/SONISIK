@@ -1,8 +1,7 @@
 {
   "appId": "com.sonisik.game",
   "appName": "SON ISIK",
-  "webDir": ".",
-  "bundledWebRuntime": false,
+  "webDir": "www",
   "server": {
     "androidScheme": "https"
   }
