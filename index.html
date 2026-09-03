@@ -94,6 +94,13 @@
 </div>
 <p id="activePlatform" class="active-platform">🖥️ PC sürüm aktif</p>
 <div id="loading">Yükleniyor...</div>
+<script>
+// localhost fallback - app.js hata verse bile 1.5sn sonra gizle (sadece localhost)
+if(location.hostname==='localhost' || location.hostname==='127.0.0.1'){
+  setTimeout(()=>{ const el=document.getElementById('loading'); if(el) el.classList.add('hidden'); }, 1500);
+  window.addEventListener('error', ()=>{ const el=document.getElementById('loading'); if(el) el.classList.add('hidden'); });
+}
+</script>
 <audio id="bgmOpening" src="assets/opening.mp3" loop preload="auto"></audio>
 <audio id="bgm" src="assets/horror.mp3" loop preload="auto"></audio>
 <audio id="loseBgm" src="assets/lose.mp3" preload="auto"></audio>
