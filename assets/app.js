@@ -66,9 +66,8 @@ function applyPlatform(){
   if(platformHint) platformHint.textContent = isMobile ? '📱 Mobil sürüm aktif' : '🖥️ PC sürüm aktif';
   if(activePlatform) activePlatform.textContent = isMobile ? '📱 Mobil sürüm aktif' : '🖥️ PC sürüm aktif';
   if(platformBtn) platformBtn.textContent = isMobile ? '🖥️ PC\'ye geç' : '📱 Mobil\'e geç';
-  // mobil kontroller sadece mobil ve oyun sirasinda gosterilecek, overlayde gizli
   if(!isMobile) mobileControls.classList.add('hidden');
-  else if(controls.isLocked) mobileControls.classList.remove('hidden');
+  else if(gameActive) mobileControls.classList.remove('hidden');
 }
 if(platformBtn) platformBtn.onclick=(e)=>{ e.stopPropagation(); isMobile=!isMobile; applyPlatform(); };
 applyPlatform();
@@ -92,9 +91,20 @@ sprintBtn.addEventListener('mousedown', ()=> sprintHeld=true);
 sprintBtn.addEventListener('mouseup', ()=> sprintHeld=false);
 flashBtn.addEventListener('click', ()=>{ flashOn=!flashOn; flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12; if(flashlightModel) flashlightModel.visible=flashOn; });
 flashBtn.addEventListener('touchstart', e=>{ e.preventDefault(); flashOn=!flashOn; flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12; if(flashlightModel) flashlightModel.visible=flashOn; }, {passive:false});
-function tryLock(){ try{ controls.lock(); } catch(e){ console.error(e); overlay.style.display='none'; } }
-startBtn.addEventListener('click', e=>{ e.stopPropagation(); tryLock(); stopOpening(); startMusic(); });
-overlay.addEventListener('click', e=>{ if(e.target===overlay) tryLock(); });
+let gameActive=false;
+function startGame(){
+  gameActive=true;
+  overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden');
+  stopOpening(); if(!musicStarted) startMusic(); if(!gameStartTime) gameStartTime=performance.now();
+  if(isMobile){ mobileControls.classList.remove('hidden'); }
+}
+function tryLock(){ try{ controls.lock(); } catch(e){ console.error(e); } }
+startBtn.addEventListener('click', e=>{
+  e.stopPropagation();
+  if(isMobile){ startGame(); }
+  else { tryLock(); }
+});
+overlay.addEventListener('click', e=>{ if(e.target===overlay && !isMobile) tryLock(); });
 restartBtn.onclick = () => location.reload();
 muteBtn.onclick = async ()=>{
   const openingActive = overlay.style.display!=='none' && !controls.isLocked;
@@ -114,9 +124,14 @@ function setMode(light){
 }
 modeDark.onclick=()=> setMode(false);
 modeLight.onclick=()=> setMode(true);
-controls.addEventListener('lock', () => { overlay.style.display='none'; gameOverEl.classList.add('hidden'); settingsPanel.classList.add('hidden'); stopOpening(); if(!musicStarted) startMusic(); if(!gameStartTime) gameStartTime=performance.now(); if(isMobile) mobileControls.classList.remove('hidden'); });
-controls.addEventListener('unlock', () => { if(!gameEnded && settingsPanel.classList.contains('hidden')){ overlay.style.display='flex'; bgm.pause(); startOpening(); } mobileControls.classList.add('hidden'); });
-document.addEventListener('click', ()=>{ if(overlay.style.display==='none' && !controls.isLocked && !gameEnded && settingsPanel.classList.contains('hidden')) tryLock(); });
+controls.addEventListener('lock', () => { startGame(); });
+controls.addEventListener('unlock', () => {
+  if(isMobile) return;
+  gameActive=false;
+  if(!gameEnded && settingsPanel.classList.contains('hidden')){ overlay.style.display='flex'; bgm.pause(); startOpening(); }
+  mobileControls.classList.add('hidden');
+});
+document.addEventListener('click', ()=>{ if(isMobile) return; if(overlay.style.display==='none' && !controls.isLocked && !gameEnded && settingsPanel.classList.contains('hidden')) tryLock(); });
 
 // --- KORKU EVI TEMALI DOKULAR ---
 function makeWoodTexture(){
@@ -539,25 +554,24 @@ function move(dt){
 // mobil kamera bakis - sag taraf surukle
 let lookTouchId=null, lastLookX=0, lastLookY=0;
 renderer.domElement.addEventListener('touchstart', e=>{
-  if(!isMobile || !controls.isLocked) return;
+  if(!isMobile || !gameActive) return;
   for(const t of e.touches){
+    // joystick veya butonlarda ise bakma degil
+    if(t.target.closest && (t.target.closest('#joystick') || t.target.closest('#sprintBtn') || t.target.closest('#flashBtn'))) continue;
     const rect=joystick.getBoundingClientRect();
     const inJoy = t.clientX>=rect.left && t.clientX<=rect.right && t.clientY>=rect.top && t.clientY<=rect.bottom;
     if(inJoy) continue;
-    // sprint/flash butonlarinda degilse look
-    if(t.target===sprintBtn || t.target===flashBtn) continue;
-    if(t.clientX > window.innerWidth*0.5){ lookTouchId=t.identifier; lastLookX=t.clientX; lastLookY=t.clientY; break; }
+    if(t.clientX > window.innerWidth*0.45){ lookTouchId=t.identifier; lastLookX=t.clientX; lastLookY=t.clientY; break; }
   }
 }, {passive:false});
 renderer.domElement.addEventListener('touchmove', e=>{
   if(lookTouchId===null) return;
+  e.preventDefault();
   for(const t of e.touches){ if(t.identifier===lookTouchId){
     const dx=t.clientX-lastLookX, dy=t.clientY-lastLookY;
-    camera.rotation.y -= dx*0.004;
+    controls.getObject().rotation.y -= dx*0.004;
     camera.rotation.x -= dy*0.004;
-    camera.rotation.x=Math.max(-1.2, Math.min(1.2, camera.rotation.x));
-    // controls objesini de guncelle
-    controls.getObject().rotation.y = camera.rotation.y;
+    camera.rotation.x=Math.max(-1.25, Math.min(1.25, camera.rotation.x));
     lastLookX=t.clientX; lastLookY=t.clientY; break;
   }}
 }, {passive:false});
@@ -678,7 +692,8 @@ function animate(now){
   // flicker titreme
   flickerLights.forEach((l,i)=>{ l.intensity = 0.6 + Math.sin(now*0.001*(1+i*0.3))*0.4 + Math.random()*0.3; });
   if(flashlightModel){ flashlightModel.rotation.z = Math.sin(now*0.004)*0.02; }
-  if(controls.isLocked && !gameEnded){
+  const canMove = (isMobile ? gameActive : controls.isLocked) && !gameEnded;
+  if(canMove){
     move(dt);
     if(flashOn && now-lastDrain>85){ battery=Math.max(0,battery-0.38); batteryVal.textContent=battery.toFixed(0); if(battery<=0){ flashlight.intensity=0; flashOn=false; playerFill.intensity=0.12; if(flashlightModel) flashlightModel.visible=false; } lastDrain=now; if(battery<20 && Math.random()<0.07) flashlight.intensity=Math.random()<0.5?0:14; }
     updatePickups(dt); updateCreature(dt, now); updatePet(dt, now); checkWin();
