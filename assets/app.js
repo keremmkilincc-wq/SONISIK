@@ -230,8 +230,9 @@ const flashlight = new THREE.SpotLight(0xfff6cc, 72, 24, Math.PI/6, 0.38, 1.1);
 flashlight.position.set(0, -0.14, 0.18);
 flashlight.castShadow = false;
 flashlight.target.position.set(0, -0.14, -20);
-camera.add(flashlight); camera.add(flashlight.target); scene.add(camera);
+camera.add(flashlight); camera.add(flashlight.target);
 const playerFill = new THREE.PointLight(0x442222, 0.5, 5); playerFill.position.set(0,0,0); camera.add(playerFill);
+controls.getObject().add(camera);
 // tavan titreyen isiklar - azaltildi kasma icin 4->2
 const flickerLights=[];
 for(let i=0;i<2;i++){
@@ -582,11 +583,12 @@ renderer.domElement.addEventListener('touchmove', e=>{
   e.preventDefault();
   for(const t of e.touches){ if(t.identifier===lookTouchId){
     const dx=t.clientX-lastLookX, dy=t.clientY-lastLookY;
-    // yanal bakis cok hizli, dikey daha yavas - takla asla olmasin
-    controls.getObject().rotation.y -= dx*0.0045;
-    camera.rotation.x -= dy*0.0016;
-    camera.rotation.x=Math.max(-0.65, Math.min(0.65, camera.rotation.x));
-    camera.rotation.y=0; camera.rotation.z=0;
+    // yanal bakis - kamera dogrudan dondur, takla engellendi
+    camera.rotation.y -= dx*0.0045;
+    controls.getObject().rotation.y = camera.rotation.y;
+    camera.rotation.x -= dy*0.0018;
+    camera.rotation.x=Math.max(-0.75, Math.min(0.75, camera.rotation.x));
+    camera.rotation.z=0;
     lastLookX=t.clientX; lastLookY=t.clientY; break;
   }}
 }, {passive:false});
