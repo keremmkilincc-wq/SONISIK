@@ -3,14 +3,26 @@
   "version": "1.0.0",
   "description": "SON ISIK - 3D FPS Korku",
   "type": "module",
+  "main": "electron/main.js",
   "scripts": {
-    "build": "echo \"no build\""
+    "build": "echo \"no build\"",
+    "electron": "electron .",
+    "dist": "electron-builder --win --x64"
   },
   "dependencies": {
     "@capacitor/core": "^6.1.0"
   },
   "devDependencies": {
     "@capacitor/android": "^6.1.0",
-    "@capacitor/cli": "^6.1.0"
+    "@capacitor/cli": "^6.1.0",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.9.0"
+  },
+  "build": {
+    "appId": "com.sonisik.game",
+    "productName": "SON ISIK",
+    "files": ["index.html", "assets/**/*", "electron/**/*"],
+    "win": { "target": "nsis", "icon": "assets/icon.png" },
+    "directories": { "output": "dist" }
   }
 }
