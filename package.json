@@ -22,7 +22,7 @@
     "appId": "com.sonisik.game",
     "productName": "SON ISIK",
     "files": ["index.html", "assets/**/*", "electron/**/*"],
-    "win": { "target": "nsis", "icon": "assets/icon.png" },
+    "win": { "target": "nsis" },
     "directories": { "output": "dist" }
   }
 }

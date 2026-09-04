@@ -6,7 +6,6 @@ function createWindow(){
     width: 1280,
     height: 720,
     title: 'SON IŞIK',
-    icon: path.join(__dirname, '../assets/icon.png'),
     webPreferences: { nodeIntegration: false, contextIsolation: true }
   });
   win.setMenu(null);
