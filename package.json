@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "SON ISIK - 3D FPS Korku",
   "type": "module",
-  "main": "electron/main.js",
+  "main": "electron/main.cjs",
   "scripts": {
     "build": "echo \"no build\"",
     "electron": "electron .",
