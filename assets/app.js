@@ -736,16 +736,40 @@ function showSpiderAlert(){
   setTimeout(()=> spiderAlert.classList.add('hidden'), 5000);
 }
 function endGame(won, isJoker=false){
-  if(!won){
-    const isSpider = !isJoker;
-    const videoSrc = isJoker ? 'assets/jumpscare.mp4' : 'assets/spider_jumpscare.mp4';
-    const subText = isJoker ? 'Jester üzerine atladı!' : 'Örümcek üzerine atladı!';
-    const descText = isJoker ? 'Joker jumpscare! Kaçamadın...' : 'Örümcek jumpscare! Ağlarına takıldın...';
+  // joker jumpscare - sadece joker yakalarsa
+  if(!won && isJoker){
     gameEnded=true; try{ controls.unlock(); }catch(e){}
     overlay.style.display='none'; mobileControls.classList.add('hidden');
     bgm.pause(); bgmOpening.pause();
     if(jumpscare){
-      jumpscare.src=videoSrc;
+      jumpscare.src='assets/jumpscare.mp4';
+      jumpscare.classList.remove('hidden');
+      jumpscare.currentTime=0; jumpscare.volume=0.9; jumpscare.muted=false;
+      jumpscare.play().catch(()=>{});
+      setTimeout(()=>{
+        jumpscare.pause(); jumpscare.classList.add('hidden');
+        // simdi kaybetme ekrani + bebek cigligi
+        gameOverEl.classList.remove('hidden'); gameOverEl.classList.add('lose'); gameOverEl.classList.remove('win');
+        loseBgm.muted=false; loseBgm.volume=0.85; loseBgm.currentTime=0; loseBgm.play().catch(()=>{});
+        const goIcon=document.getElementById('goIcon'), goSub=document.getElementById('goSub'), goStat1=document.getElementById('goStat1'), goStat2=document.getElementById('goStat2');
+        const elapsed = gameStartTime ? Math.floor((performance.now()-gameStartTime)/1000) : 0;
+        const mins=String(Math.floor(elapsed/60)).padStart(2,'0'), secs=String(elapsed%60).padStart(2,'0');
+        if(goStat1) goStat1.textContent=`🔋 ${collected}/60 pil`;
+        if(goStat2) goStat2.textContent=`⏱️ ${mins}:${secs} • 🔋 ${battery.toFixed(0)}%`;
+        if(goIcon) goIcon.textContent='☠️';
+        goTitle.textContent='YAKALANDIN';
+        if(goSub) goSub.textContent='Jester üzerine atladı!';
+        goDesc.textContent='Joker jumpscare! Kaçamadıın...';
+      }, 2400);
+    }
+    return;
+  }
+  if(!won && !isJoker){
+    gameEnded=true; try{ controls.unlock(); }catch(e){}
+    overlay.style.display='none'; mobileControls.classList.add('hidden');
+    bgm.pause(); bgmOpening.pause();
+    if(jumpscare){
+      jumpscare.src='assets/spider_jumpscare.mp4';
       jumpscare.classList.remove('hidden');
       jumpscare.currentTime=0; jumpscare.volume=0.9; jumpscare.muted=false;
       jumpscare.play().catch(()=>{});
@@ -760,8 +784,8 @@ function endGame(won, isJoker=false){
         if(goStat2) goStat2.textContent=`⏱️ ${mins}:${secs} • 🔋 ${battery.toFixed(0)}%`;
         if(goIcon) goIcon.textContent='☠️';
         goTitle.textContent='YAKALANDIN';
-        if(goSub) goSub.textContent=subText;
-        goDesc.textContent=descText;
+        if(goSub) goSub.textContent='Örümcek üzerine atladı!';
+        goDesc.textContent='Örümcek jumpscare! Ağlarına takıldın...';
       }, 2400);
     }
     return;
