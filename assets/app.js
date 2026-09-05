@@ -90,8 +90,15 @@ sprintBtn.addEventListener('touchstart', e=>{ e.preventDefault(); sprintHeld=tru
 sprintBtn.addEventListener('touchend', e=>{ e.preventDefault(); sprintHeld=false; }, {passive:false});
 sprintBtn.addEventListener('mousedown', ()=> sprintHeld=true);
 sprintBtn.addEventListener('mouseup', ()=> sprintHeld=false);
-flashBtn.addEventListener('click', ()=>{ flashOn=!flashOn; flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12; if(flashlightModel) flashlightModel.visible=flashOn; });
-flashBtn.addEventListener('touchstart', e=>{ e.preventDefault(); flashOn=!flashOn; flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12; if(flashlightModel) flashlightModel.visible=flashOn; }, {passive:false});
+function toggleFlash(){
+  if(battery<=0.5 && !flashOn){ flashlight.intensity=8; setTimeout(()=>{ if(battery<=0.5) flashlight.intensity=0; }, 90); return; }
+  flashOn=!flashOn;
+  if(flashOn && battery<=0.5){ flashOn=false; flashlight.intensity=0; playerFill.intensity=0.12; if(flashlightModel) flashlightModel.visible=false; return; }
+  flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12; if(flashlightModel) flashlightModel.visible=flashOn;
+  if(flashOn) lastDrain=performance.now();
+}
+flashBtn.addEventListener('click', toggleFlash);
+flashBtn.addEventListener('touchstart', e=>{ e.preventDefault(); toggleFlash(); }, {passive:false});
 let gameActive=false;
 function startGame(){
   gameActive=true;
@@ -518,7 +525,22 @@ let stamina=100, canSprint=true;
 let gameStartTime=0;
 flashlight.intensity=55; let lastDrain=performance.now();
 const keys={};
-addEventListener('keydown', e=>{ keys[e.code]=true; if(e.code==='KeyF'){ flashOn=!flashOn; flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12; if(flashlightModel) flashlightModel.visible=flashOn; if(flashOn) lastDrain=performance.now(); }});
+addEventListener('keydown', e=>{
+  keys[e.code]=true;
+  if(e.code==='KeyF'){
+    if(battery<=0.5 && !flashOn){
+      // sarj yokken acmaya calisirsa kisa cizirti
+      flashlight.intensity=8; setTimeout(()=>{ if(battery<=0.5) flashlight.intensity=0; }, 90);
+      return;
+    }
+    flashOn=!flashOn;
+    // acmaya calisiyor ama sarj yoksa engelle
+    if(flashOn && battery<=0.5){ flashOn=false; flashlight.intensity=0; playerFill.intensity=0.12; if(flashlightModel) flashlightModel.visible=false; return; }
+    flashlight.intensity=flashOn?70:0; playerFill.intensity=flashOn?0.5:0.12;
+    if(flashlightModel) flashlightModel.visible=flashOn;
+    if(flashOn) lastDrain=performance.now();
+  }
+});
 addEventListener('keyup', e=> keys[e.code]=false);
 
 // --- CARPISMA ---
