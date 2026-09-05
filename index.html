@@ -19,7 +19,7 @@
 <div id="hud">
   <div id="battery">🔋 <span id="batteryVal">100</span>%</div>
   <div id="staminaWrap"><div id="staminaBar"></div><span id="staminaVal">100%</span></div>
-  <div id="stats">🔋 Pil x<span id="pickups">0/40</span> | 🚪 <span id="doorStatus">KAPALI</span></div>
+  <div id="stats">🔋 Pil x<span id="pickups">0/60</span> | 🚪 <span id="doorStatus">KAPALI</span></div>
   <div id="hint">WASD + Mouse | F: Fener | SHIFT: Koş</div>
   <button id="muteBtn" title="Sesi aç/kapat">🔊</button>
 </div>
@@ -29,13 +29,13 @@
   <div class="blood-drip"></div>
   <div class="overlay-vignette"></div>
   <div class="overlay-content">
-    <p class="eyebrow">☠ 40 PİL TOPLA — 90×90 KORKU EVİ — 2 CANAVAR ☠</p>
+    <p class="eyebrow">☠ 60 PİL TOPLA — 120×120 DEV KORKU EVİ — 2 CANAVAR ☠</p>
     <h1 class="creepy-title"><span class="glitch" data-text="SON IŞIK">SON IŞIK</span></h1>
     <p class="creepy-sub">Işıklar söndü. El fenerin titriyor. <br><em>Joker ve sadık köpeği</em> karanlıkta avlanıyor.</p>
     <div class="creepy-badges">
-      <span>🔋 40 pil</span><span>🏚️ 4 odacık</span><span>👹 Joker 1.70m</span><span>🐕 Örümcek</span>
+      <span>🔋 60 pil</span><span>🏚️ 4 odacık</span><span>👹 Joker 1.70m</span><span>🐕 Örümcek</span><span>🎲 5 şans</span>
     </div>
-     <p id="overlayText" class="overlay-text">Pil bitmeden 40 pili topla, 4 odacığı ara, masa-sandalyelerin arasından sıyrıl ve <strong>çıkış kapısını</strong> bul.</p>
+     <p id="overlayText" class="overlay-text">Pil bitmeden 60 pili topla, 5 şans bloğunu dene, 4 odacığı ara ve <strong>çıkış kapısını</strong> bul.</p>
     <button id="startBtn" class="creepy-btn"><span class="btn-glow"></span> ▶ OYNA — KORKUYOR MUSUN?</button>
     <p class="sub creepy-sub2">WASD hareket • SHIFT koş (stamina) • F fener • Duvarlardan geçemezsin</p>
     <div class="overlay-actions">
@@ -85,6 +85,7 @@
   </div>
 </div>
 <div id="spiderAlert" class="hidden">🕷️ ÖRÜMCEK GELDİ! 🕷️</div>
+<div id="chanceAlert" class="hidden"></div>
 <div id="mobileControls" class="hidden">
   <div id="joystick"><div id="stick"></div></div>
   <div id="mobileBtns">

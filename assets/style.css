@@ -96,4 +96,7 @@ canvas{display:block}
 @keyframes iconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 #spiderAlert{position:fixed;top:42%;left:50%;transform:translate(-50%,-50%);z-index:15;background:rgba(20,0,0,0.88);border:2px solid #ff1a1a;color:#ff1a1a;padding:18px 28px;border-radius:14px;font-family:Creepster, cursive;font-size:38px;letter-spacing:.08em;text-shadow:0 0 12px rgba(255,0,0,0.7), 0 2px 0 #000;box-shadow:0 0 28px rgba(255,0,0,0.45);animation:spiderShake .14s infinite}
 #spiderAlert.hidden{display:none}
+#chanceAlert{position:fixed;top:28%;left:50%;transform:translate(-50%,-50%);z-index:15;background:rgba(60,0,90,0.92);border:2px solid #a855f7;color:#fff;padding:14px 22px;border-radius:12px;font-weight:900;font-size:22px;letter-spacing:.04em;box-shadow:0 0 20px rgba(168,85,247,0.5);animation:chancePop .3s ease-out}
+#chanceAlert.hidden{display:none}
 @keyframes spiderShake{0%{transform:translate(-50%,-50%) translate(1px,1px) rotate(.4deg)}25%{transform:translate(-50%,-50%) translate(-1px,-1px) rotate(-.4deg)}50%{transform:translate(-50%,-50%) translate(-1px,1px) rotate(.3deg)}75%{transform:translate(-50%,-50%) translate(1px,-1px) rotate(-.3deg)}100%{transform:translate(-50%,-50%) translate(1px,1px) rotate(.4deg)}}
+@keyframes chancePop{0%{transform:translate(-50%,-50%) scale(.7);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}

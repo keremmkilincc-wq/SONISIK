@@ -266,13 +266,12 @@ function applyMode(){
 // ilk mod uygula
 setTimeout(()=>{ modeDark.classList.toggle('active', !isLightMode); modeLight.classList.toggle('active', isLightMode); applyMode(); }, 100);
 
-// floor korku evi
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(90,90), new THREE.MeshStandardMaterial({map:woodTex, roughness:0.85, metalness:0.05}));
+// floor korku evi - 120x120 buyutuldu
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(120,120), new THREE.MeshStandardMaterial({map:woodTex, roughness:0.85, metalness:0.05}));
 floor.rotation.x = -Math.PI/2; floor.receiveShadow=false; floor.position.y=0.01; scene.add(floor);
-// halilar
-for(let i=0;i<6;i++){
-  const rug=new THREE.Mesh(new THREE.PlaneGeometry(6+Math.random()*4, 4+Math.random()*3), new THREE.MeshStandardMaterial({color:0x4a1010, roughness:1}));
-  rug.rotation.x=-Math.PI/2; rug.position.set((Math.random()-0.5)*50,0.02,(Math.random()-0.5)*50); rug.receiveShadow=false; scene.add(rug);
+for(let i=0;i<8;i++){
+  const rug=new THREE.Mesh(new THREE.PlaneGeometry(7+Math.random()*4, 5+Math.random()*3), new THREE.MeshStandardMaterial({color:0x4a1010, roughness:1}));
+  rug.rotation.x=-Math.PI/2; rug.position.set((Math.random()-0.5)*70,0.02,(Math.random()-0.5)*70); rug.receiveShadow=false; scene.add(rug);
 }
 
 const wallMat = new THREE.MeshStandardMaterial({map:wallTex, roughness:0.9, color:0xdddddd});
@@ -285,17 +284,15 @@ function wall(w,h,x,y,z,ry=0){
   colliders.push({ minX:x-halfW-0.45, maxX:x+halfW+0.45, minZ:z-halfD-0.45, maxZ:z+halfD+0.45 });
   return m;
 }
-wall(90,5,0,2.5,-45); wall(90,5,0,2.5,45); wall(90,5,-45,2.5,0,Math.PI/2); wall(90,5,45,2.5,0,Math.PI/2);
-// kolonlar - tavana kadar, eski ve urpertici
+wall(120,5,0,2.5,-60); wall(120,5,0,2.5,60); wall(120,5,-60,2.5,0,Math.PI/2); wall(120,5,60,2.5,0,Math.PI/2);
 function addColumn(x,z){
   const col=new THREE.Mesh(new THREE.BoxGeometry(0.85,5,0.85), columnMat);
   col.position.set(x,2.5,z); col.castShadow=false; col.receiveShadow=false; scene.add(col);
   colliders.push({ minX:x-0.62, maxX:x+0.62, minZ:z-0.62, maxZ:z+0.62 });
 }
-for(let x=-40;x<=40;x+=10){ if(x!==0) addColumn(x,-44.6); addColumn(x,44.6); }
-for(let z=-35;z<=35;z+=10){ addColumn(-44.6,z); addColumn(44.6,z); }
-// kose buyuk kolonlar
-[[-44.6,-44.6],[44.6,-44.6],[-44.6,44.6],[44.6,44.6]].forEach(([x,z])=>{
+for(let x=-55;x<=55;x+=11){ if(x!==0) addColumn(x,-59.6); addColumn(x,59.6); }
+for(let z=-50;z<=50;z+=11){ addColumn(-59.6,z); addColumn(59.6,z); }
+[[-59.6,-59.6],[59.6,-59.6],[-59.6,59.6],[59.6,59.6]].forEach(([x,z])=>{
   const big=new THREE.Mesh(new THREE.BoxGeometry(1.2,5,1.2), columnMat);
   big.position.set(x,2.5,z); scene.add(big);
 });
@@ -346,9 +343,10 @@ function isRoomInside(x,z){
   return false;
 }
 function isNearPickup(x,z){
-  const picks=[[-42,-42],[42,-42],[-42,42],[42,42],[0,-38],[-20,34],[22,36],[-36,-18],[36,-20],[-38,10],[38,12],[-10,-30],[10,-32],[-30,22],[30,24],[-18,-28],[18,-26],[-42,0],[42,2],[0,38],[-34,34],[34,-34],[-26,-10],[26,10],[-12,18],[12,20],[-36,28],[36,28],[-8,-42],[8,-42],[-14,40],[14,40],[-28,-32],[28,-32],[-6,30],[6,32],[-18,0],[18,0],[0,12],[0,-12]];
+  const picks=[[-42,-42],[42,-42],[-42,42],[42,42],[0,-38],[-20,34],[22,36],[-36,-18],[36,-20],[-38,10],[38,12],[-10,-30],[10,-32],[-30,22],[30,24],[-18,-28],[18,-26],[-42,0],[42,2],[0,38],[-34,34],[34,-34],[-26,-10],[26,10],[-12,18],[12,20],[-36,28],[36,28],[-8,-42],[8,-42],[-14,40],[14,40],[-28,-32],[28,-32],[-6,30],[6,32],[-18,0],[18,0],[0,12],[0,-12],[-55,0],[55,0],[0,55],[0,-55],[-55,-22],[55,22],[-50,35],[50,-35],[-30,55],[30,-55],[-55,22],[55,-22],[45,45],[-45,-45],[-20,50],[20,-50],[35,35],[-35,-35],[48,-10],[-48,10]];
   for(const p of picks){ if(Math.hypot(x-p[0], z-p[1])<3.2) return true; }
   for(const t of tablePositions){ if(Math.hypot(x-t[0], z-t[1])<3.0) return true; }
+  for(const c of [[-35,0],[35,0],[0,35],[0,-35],[0,0]]){ if(Math.hypot(x-c[0], z-c[1])<2.8) return true; }
   return false;
 }
 
@@ -356,7 +354,7 @@ const crateBoxes=[];
 for(let i=0;i<22;i++){
   const sx=0.9+Math.random()*1.4, sy=1+Math.random()*1.6, sz=0.9+Math.random()*1.4;
   const mat = i%3===0 ? new THREE.MeshStandardMaterial({map:crateTex}) : (i%3===1? new THREE.MeshStandardMaterial({color:0x3a2518, roughness:0.9}) : wallMat);
-  let x,y,z; let tries=0; do{ x=(Math.random()-0.5)*74; z=(Math.random()-0.5)*74; tries++; if(tries>40) break; } while( isRoomInside(x,z) || isNearPickup(x,z) );
+  let x,y,z; let tries=0; do{ x=(Math.random()-0.5)*108; z=(Math.random()-0.5)*108; tries++; if(tries>50) break; } while( isRoomInside(x,z) || isNearPickup(x,z) );
   const b=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), mat);
   b.position.set(x, sy/2, z);
   if(b.position.distanceTo(new THREE.Vector3(0,0,10))<6) b.position.z+=10;
@@ -381,9 +379,9 @@ fbxLoader.load('assets/models/table.fbx', (fbx)=>{
 
 const doorMat = new THREE.MeshStandardMaterial({map:doorTex, roughness:0.7, emissive:0x1a0a0a, emissiveIntensity:0.12});
 const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.6,3.4,0.38), doorMat);
-doorFrame.position.set(0,1.6,-44.85); scene.add(doorFrame);
-const doorLight = new THREE.PointLight(0xef4444, 6, 11); doorLight.position.set(0,1.6,-43.2); scene.add(doorLight);
-let doorSprite; (()=>{ const c=document.createElement('canvas'); c.width=256; c.height=64; const g=c.getContext('2d'); g.fillStyle='#ef4444'; g.font='bold 26px sans-serif'; g.fillText('KİLİTLİ',68,42); const t=new THREE.CanvasTexture(c); doorSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:t})); doorSprite.scale.set(2.2,0.55,1); doorSprite.position.set(0,3.0,-44); scene.add(doorSprite); })();
+doorFrame.position.set(0,1.6,-59.85); scene.add(doorFrame);
+const doorLight = new THREE.PointLight(0xef4444, 6, 11); doorLight.position.set(0,1.6,-58.2); scene.add(doorLight);
+let doorSprite; (()=>{ const c=document.createElement('canvas'); c.width=256; c.height=64; const g=c.getContext('2d'); g.fillStyle='#ef4444'; g.font='bold 26px sans-serif'; g.fillText('KİLİTLİ',68,42); const t=new THREE.CanvasTexture(c); doorSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:t})); doorSprite.scale.set(2.2,0.55,1); doorSprite.position.set(0,3.0,-59); scene.add(doorSprite); })();
 function openDoor(){
   doorMat.color.set(0x14532d); doorMat.emissive.set(0x22c55e); doorMat.emissiveIntensity=1.3;
   doorLight.color.set(0x22c55e); doorLight.intensity=12;
@@ -407,6 +405,25 @@ function spawnBattery(x,z){
  [-34,34],[34,-34],[-26,-10],[26,10],[-12,18],[12,20],[-36,28],[36,28],[-8,-42],[8,-42],
  [-14,40],[14,40],[-28,-32],[28,-32],[-6,30],[6,32],[-18,0],[18,0],[0,12],[0,-12]
 ].forEach(([x,z])=> spawnBattery(x,z));
+// ek 20 pil - 60 tamamla
+[[-55,0],[55,0],[0,55],[0,-55],[-55,-22],[55,22],[-50,35],[50,-35],[-30,55],[30,-55],[-55,22],[55,-22],[45,45],[-45,-45],[-20,50],[20,-50],[35,35],[-35,-35],[48,-10],[-48,10]].forEach(([x,z])=> spawnBattery(x,z));
+// sans bloklari - 5 tane
+const chanceBlocks=[];
+function spawnChance(x,z){
+  const g=new THREE.Group();
+  const box=new THREE.Mesh(new THREE.BoxGeometry(0.85,0.85,0.85), new THREE.MeshStandardMaterial({color:0x7c3aed, emissive:0x4c1d95, emissiveIntensity:0.55, roughness:0.6}));
+  box.castShadow=false;
+  const canvas=document.createElement('canvas'); canvas.width=128; canvas.height=128;
+  const ctx=canvas.getContext('2d'); ctx.fillStyle='#7c3aed'; ctx.fillRect(0,0,128,128); ctx.fillStyle='#fff'; ctx.font='bold 84px sans-serif'; ctx.fillText('?',48,92);
+  const tex=new THREE.CanvasTexture(canvas); tex.colorSpace=THREE.SRGBColorSpace;
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(0.6,0.6), new THREE.MeshBasicMaterial({map:tex, transparent:true}));
+  face.position.set(0,0,0.43); box.add(face);
+  const face2=face.clone(); face2.rotation.y=Math.PI; face2.position.set(0,0,-0.43); box.add(face2);
+  const light=new THREE.PointLight(0x7c3aed, 2.2, 7); light.position.y=0.5;
+  g.add(box,light); g.position.set(x,0.55,z); g.userData={ collected:false, baseY:0.55, t:Math.random()*6 }; chanceBlocks.push(g); scene.add(g);
+  colliders.push({ minX:x-0.62, maxX:x+0.62, minZ:z-0.62, maxZ:z+0.62 });
+}
+[ [-35,0],[35,0],[0,35],[0,-35],[0,0] ].forEach(([x,z])=> spawnChance(x,z));
 
 // --- EL FENERI 3D MODEL ---
 let flashlightModel=null;
@@ -464,7 +481,7 @@ let creatureState='patrol'; let patrolTarget=new THREE.Vector3((Math.random()-0.
 const pet=new THREE.Group();
 let spiderMesh=null; let spiderMixer=null;
 const pLight=new THREE.PointLight(0xff6600, 2.6, 7); pLight.position.set(0,0.5,0); pet.add(pLight);
-pet.position.set(1.5,0,-41); pet.visible=false; scene.add(pet);
+pet.position.set(1.5,0,-56); pet.visible=false; scene.add(pet);
 // orumcek yukle (OBJ + MTL, FBX alternatif)
 const spiderMtlLoader=new MTLLoader();
 spiderMtlLoader.setPath('assets/models/spider/');
@@ -510,13 +527,11 @@ function isBlocked(x,z){
   return false;
 }
 function tryMove(oldPos, newPos){
-  // x ve z ayri kontrol, duvara surtunme
   let nx=newPos.x, nz=newPos.z;
   if(!isBlocked(nx, oldPos.z)) oldPos.x=nx; 
   if(!isBlocked(oldPos.x, nz)) oldPos.z=nz;
-  // clamp dis duvar
-  oldPos.x=Math.max(-44,Math.min(44,oldPos.x));
-  oldPos.z=Math.max(-44,Math.min(44,oldPos.z));
+  oldPos.x=Math.max(-59,Math.min(59,oldPos.x));
+  oldPos.z=Math.max(-59,Math.min(59,oldPos.z));
 }
 function tryMoveEntity(pos, target, speed, dt){
   const dir=new THREE.Vector3().subVectors(target,pos); dir.y=0; const len=dir.length();
@@ -607,10 +622,30 @@ function updatePickups(dt){
     if(dist<1.7){
       g.userData.collected=true; g.visible=false; collected++;
       battery=Math.min(100, battery+10);
-      pickupsEl.textContent=`${collected}/40`; batteryVal.textContent=battery.toFixed(0);
-      if(collected>=40){ doorStatusEl.textContent='AÇIK'; doorStatusEl.classList.add('open'); openDoor(); }
+      pickupsEl.textContent=`${collected}/60`; batteryVal.textContent=battery.toFixed(0);
+      if(collected>=60){ doorStatusEl.textContent='AÇIK'; doorStatusEl.classList.add('open'); openDoor(); }
       flashlight.intensity=80; setTimeout(()=> flashlight.intensity=flashOn?70:0,140);
       if(collected===3) creature.position.lerp(controls.getObject().position, 0.12);
+    }
+  });
+}
+function updateChance(dt){
+  const chanceAlert=document.getElementById('chanceAlert');
+  chanceBlocks.forEach(g=>{
+    if(g.userData.collected) return;
+    g.userData.t+=dt*1.8;
+    g.position.y=g.userData.baseY + Math.sin(g.userData.t)*0.14;
+    g.rotation.y+=dt*1.0; g.rotation.x+=dt*0.6;
+    if(g.position.distanceTo(controls.getObject().position)<1.6){
+      g.userData.collected=true; g.visible=false;
+      const r=Math.random(); let msg="";
+      if(r<0.25){ battery=0; flashlight.intensity=0; flashOn=false; playerFill.intensity=0.12; if(flashlightModel) flashlightModel.visible=false; msg="💔 Şarj sıfırlandı!"; }
+      else if(r<0.5){ battery=100; msg="🔋 Şarj fullendi!"; }
+      else if(r<0.75){ stamina=0; canSprint=false; msg="😫 Stamina sıfırlandı!"; }
+      else { stamina=100; canSprint=true; msg="⚡ Stamina fullendi!"; }
+      batteryVal.textContent=battery.toFixed(0);
+      staminaBar.style.width=Math.round(stamina)+"%"; staminaVal.textContent=Math.round(stamina)+"%"; staminaBar.classList.toggle('low', stamina<28);
+      if(chanceAlert){ chanceAlert.textContent=msg; chanceAlert.classList.remove('hidden'); setTimeout(()=> chanceAlert.classList.add('hidden'), 2000); }
     }
   });
 }
@@ -668,8 +703,8 @@ function updatePet(dt, now){
   if(hDistPet<1.05 && !gameEnded) endGame(false);
 }
 function checkWin(){
-  if(collected>=40 && controls.getObject().position.distanceTo(doorFrame.position)<2.8) endGame(true);
-  else if(collected<40 && controls.getObject().position.distanceTo(doorFrame.position)<2.4){ doorFrame.material.emissiveIntensity=1.6; setTimeout(()=> doorFrame.material.emissiveIntensity=0.8,180); }
+  if(collected>=60 && controls.getObject().position.distanceTo(doorFrame.position)<2.8) endGame(true);
+  else if(collected<60 && controls.getObject().position.distanceTo(doorFrame.position)<2.4){ doorFrame.material.emissiveIntensity=1.6; setTimeout(()=> doorFrame.material.emissiveIntensity=0.8,180); }
 }
 let spiderAlertShown=false;
 function showSpiderAlert(){
@@ -692,13 +727,13 @@ function endGame(won){
   const goIcon=document.getElementById('goIcon'), goSub=document.getElementById('goSub'), goStat1=document.getElementById('goStat1'), goStat2=document.getElementById('goStat2');
   const elapsed = gameStartTime ? Math.floor((performance.now()-gameStartTime)/1000) : 0;
   const mins=String(Math.floor(elapsed/60)).padStart(2,'0'), secs=String(elapsed%60).padStart(2,'0');
-  if(goStat1) goStat1.textContent=`🔋 ${collected}/40 pil`;
+  if(goStat1) goStat1.textContent=`🔋 ${collected}/60 pil`;
   if(goStat2) goStat2.textContent=`⏱️ ${mins}:${secs} • 🔋 ${battery.toFixed(0)}%`;
   if(won){
     if(goIcon) goIcon.textContent='🚪✨';
     goTitle.textContent='KAÇTIN!';
     if(goSub) goSub.textContent='Karanlığı yendin — ışık seninleydi';
-    goDesc.textContent=`40 pili toplayıp 90×90 evden canlı çıktın. Joker ve örümcek arkanda kaldı.`;
+    goDesc.textContent=`60 pili toplayıp 120×120 evden canlı çıktın. Joker ve örümcek arkanda kaldı.`;
   } else {
     if(goIcon) goIcon.textContent='☠️';
     goTitle.textContent='YAKALANDIN';
@@ -718,7 +753,7 @@ function animate(now){
   if(canMove){
     move(dt);
     if(flashOn && now-lastDrain>85){ battery=Math.max(0,battery-0.38); batteryVal.textContent=battery.toFixed(0); if(battery<=0){ flashlight.intensity=0; flashOn=false; playerFill.intensity=0.12; if(flashlightModel) flashlightModel.visible=false; } lastDrain=now; if(battery<20 && Math.random()<0.07) flashlight.intensity=Math.random()<0.5?0:14; }
-    updatePickups(dt); updateCreature(dt, now); updatePet(dt, now); checkWin();
+    updatePickups(dt); updateChance(dt); updateCreature(dt, now); updatePet(dt, now); checkWin();
   } else {
     if(!gameEnded) updateStamina(dt);
     pickups.forEach(g=>{ if(!g.userData.collected) g.rotation.y+=0.006; });
