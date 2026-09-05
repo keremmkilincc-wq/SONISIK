@@ -20,6 +20,7 @@ const bgm = document.getElementById('bgm');
 const bgmOpening = document.getElementById('bgmOpening');
 const loseBgm = document.getElementById('loseBgm');
 const spiderAlert = document.getElementById('spiderAlert');
+const jumpscare = document.getElementById('jumpscare');
 const muteBtn = document.getElementById('muteBtn');
 const loadingEl = document.getElementById('loading');
 const settingsBtn = document.getElementById('settingsBtn');
@@ -346,7 +347,7 @@ function isNearPickup(x,z){
   const picks=[[-42,-42],[42,-42],[-42,42],[42,42],[0,-38],[-20,34],[22,36],[-36,-18],[36,-20],[-38,10],[38,12],[-10,-30],[10,-32],[-30,22],[30,24],[-18,-28],[18,-26],[-42,0],[42,2],[0,38],[-34,34],[34,-34],[-26,-10],[26,10],[-12,18],[12,20],[-36,28],[36,28],[-8,-42],[8,-42],[-14,40],[14,40],[-28,-32],[28,-32],[-6,30],[6,32],[-18,0],[18,0],[0,12],[0,-12],[-55,0],[55,0],[0,55],[0,-55],[-55,-22],[55,22],[-50,35],[50,-35],[-30,55],[30,-55],[-55,22],[55,-22],[45,45],[-45,-45],[-20,50],[20,-50],[35,35],[-35,-35],[48,-10],[-48,10]];
   for(const p of picks){ if(Math.hypot(x-p[0], z-p[1])<3.2) return true; }
   for(const t of tablePositions){ if(Math.hypot(x-t[0], z-t[1])<3.0) return true; }
-  for(const c of [[-35,0],[35,0],[0,35],[0,-35],[0,0]]){ if(Math.hypot(x-c[0], z-c[1])<2.8) return true; }
+  for(const c of [[-35,0],[35,0],[0,35],[0,-35],[0,0],[-20,20],[20,-20],[-20,-20],[20,20],[-50,10],[50,-10],[10,50],[-10,-50],[-40,30],[40,-30]]){ if(Math.hypot(x-c[0], z-c[1])<2.8) return true; }
   return false;
 }
 
@@ -407,23 +408,22 @@ function spawnBattery(x,z){
 ].forEach(([x,z])=> spawnBattery(x,z));
 // ek 20 pil - 60 tamamla
 [[-55,0],[55,0],[0,55],[0,-55],[-55,-22],[55,22],[-50,35],[50,-35],[-30,55],[30,-55],[-55,22],[55,-22],[45,45],[-45,-45],[-20,50],[20,-50],[35,35],[-35,-35],[48,-10],[-48,10]].forEach(([x,z])=> spawnBattery(x,z));
-// sans bloklari - 5 tane
+// sans bloklari - 15 tane - isiksiz (kasma onlemi)
 const chanceBlocks=[];
 function spawnChance(x,z){
   const g=new THREE.Group();
-  const box=new THREE.Mesh(new THREE.BoxGeometry(0.85,0.85,0.85), new THREE.MeshStandardMaterial({color:0x7c3aed, emissive:0x4c1d95, emissiveIntensity:0.55, roughness:0.6}));
+  const box=new THREE.Mesh(new THREE.BoxGeometry(0.78,0.78,0.78), new THREE.MeshStandardMaterial({color:0x7c3aed, emissive:0x4c1d95, emissiveIntensity:0.45, roughness:0.7}));
   box.castShadow=false;
-  const canvas=document.createElement('canvas'); canvas.width=128; canvas.height=128;
-  const ctx=canvas.getContext('2d'); ctx.fillStyle='#7c3aed'; ctx.fillRect(0,0,128,128); ctx.fillStyle='#fff'; ctx.font='bold 84px sans-serif'; ctx.fillText('?',48,92);
+  const canvas=document.createElement('canvas'); canvas.width=64; canvas.height=64;
+  const ctx=canvas.getContext('2d'); ctx.fillStyle='#7c3aed'; ctx.fillRect(0,0,64,64); ctx.fillStyle='#fff'; ctx.font='bold 42px sans-serif'; ctx.fillText('?',17,48);
   const tex=new THREE.CanvasTexture(canvas); tex.colorSpace=THREE.SRGBColorSpace;
-  const face=new THREE.Mesh(new THREE.PlaneGeometry(0.6,0.6), new THREE.MeshBasicMaterial({map:tex, transparent:true}));
-  face.position.set(0,0,0.43); box.add(face);
-  const face2=face.clone(); face2.rotation.y=Math.PI; face2.position.set(0,0,-0.43); box.add(face2);
-  const light=new THREE.PointLight(0x7c3aed, 2.2, 7); light.position.y=0.5;
-  g.add(box,light); g.position.set(x,0.55,z); g.userData={ collected:false, baseY:0.55, t:Math.random()*6 }; chanceBlocks.push(g); scene.add(g);
-  colliders.push({ minX:x-0.62, maxX:x+0.62, minZ:z-0.62, maxZ:z+0.62 });
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.5), new THREE.MeshBasicMaterial({map:tex, transparent:true}));
+  face.position.set(0,0,0.40); box.add(face);
+  const face2=face.clone(); face2.rotation.y=Math.PI; face2.position.set(0,0,-0.40); box.add(face2);
+  g.add(box); g.position.set(x,0.52,z); g.userData={ collected:false, baseY:0.52, t:Math.random()*6 }; chanceBlocks.push(g); scene.add(g);
+  colliders.push({ minX:x-0.58, maxX:x+0.58, minZ:z-0.58, maxZ:z+0.58 });
 }
-[ [-35,0],[35,0],[0,35],[0,-35],[0,0] ].forEach(([x,z])=> spawnChance(x,z));
+[ [-35,0],[35,0],[0,35],[0,-35],[0,0], [-20,20],[20,-20],[-20,-20],[20,20], [-50,10],[50,-10],[10,50],[-10,-50], [-40,30],[40,-30] ].forEach(([x,z])=> spawnChance(x,z));
 
 // --- EL FENERI 3D MODEL ---
 let flashlightModel=null;
@@ -654,12 +654,12 @@ function updateCreature(dt, now){
   let inLight=false;
   if(flashOn && dist<10){ const dir=new THREE.Vector3(); camera.getWorldDirection(dir); const toC=new THREE.Vector3().subVectors(cPos, camera.position).normalize(); if(dir.dot(toC)>0.78) inLight=true; }
   if(inLight){ creatureState='flee'; fleeUntil=now+900; }
-  else if(now > fleeUntil){ const moving=keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']; const noise=moving || !flashOn; if(dist<18 && noise) creatureState='chase'; else creatureState='patrol'; }
+  else if(now > fleeUntil){ const moving=keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']; const noise=moving || !flashOn; if(noise) creatureState='chase'; else creatureState='patrol'; }
   else creatureState='flee';
   let speed, target;
-  if(creatureState==='flee'){ const away=new THREE.Vector3().subVectors(cPos, playerPos).normalize().multiplyScalar(7); target=new THREE.Vector3().addVectors(cPos, away); speed=3.8; }
-  else if(creatureState==='chase'){ target=playerPos.clone(); speed=3.4 + collected*0.09 + (battery<30?1.0:0); }
-  else { target=patrolTarget; speed=1.85; if(cPos.distanceTo(patrolTarget)<1.0) patrolTarget.set((Math.random()-0.5)*52,0,(Math.random()-0.5)*52); }
+  if(creatureState==='flee'){ const away=new THREE.Vector3().subVectors(cPos, playerPos).normalize().multiplyScalar(7); target=new THREE.Vector3().addVectors(cPos, away); speed=4.8; }
+  else if(creatureState==='chase'){ target=playerPos.clone(); speed=4.8 + collected*0.12 + (battery<30?1.2:0); }
+  else { target=patrolTarget; speed=2.4; if(cPos.distanceTo(patrolTarget)<1.0) patrolTarget.set((Math.random()-0.5)*60,0,(Math.random()-0.5)*60); }
   if(target){
     const moved=tryMoveEntity(cPos, target, speed, dt);
     if(moved){
@@ -677,7 +677,7 @@ function updateCreature(dt, now){
   } else cLight.position.y=1.1 + Math.sin(now*0.006)*(creatureState==='chase'?0.11:0.04);
   if(dist<6 && creatureState==='chase' && Math.random()<0.04) cLight.intensity=Math.random()*4+1;
   const hDistCre = Math.hypot(cPos.x - playerPos.x, cPos.z - playerPos.z);
-  if(hDistCre<1.15 && !gameEnded) endGame(false);
+  if(hDistCre<1.15 && !gameEnded) endGame(false, true);
 }
 function updatePet(dt, now){
   if(collected<10){ if(pet.visible) pet.visible=false; petState='sleep'; if(spiderMesh) spiderMesh.position.y=0.35 + Math.sin(now*0.002)*0.04; return; }
@@ -686,12 +686,12 @@ function updatePet(dt, now){
   let inLight=false;
   if(flashOn && dist<9){ const dir=new THREE.Vector3(); camera.getWorldDirection(dir); const toP=new THREE.Vector3().subVectors(pPos, camera.position).normalize(); if(dir.dot(toP)>0.78) inLight=true; }
   if(inLight){ petState='flee'; petFleeUntil=now+700; }
-  else if(now>petFleeUntil){ const moving=keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']; if(dist<16 && (moving || !flashOn)) petState='chase'; else petState='patrol'; }
+  else if(now>petFleeUntil){ const moving=keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD']; if(moving || !flashOn) petState='chase'; else petState='patrol'; }
   else petState='flee';
   let speed, target;
-  if(petState==='flee'){ const away=new THREE.Vector3().subVectors(pPos, playerPos).normalize().multiplyScalar(6); target=new THREE.Vector3().addVectors(pPos, away); speed=4.5; }
-  else if(petState==='chase'){ target=playerPos.clone(); speed=4.3; }
-  else { target=new THREE.Vector3().copy(patrolTarget); speed=1.6; if(pPos.distanceTo(patrolTarget)<1.2) patrolTarget.set((Math.random()-0.5)*46,0,(Math.random()-0.5)*46); }
+  if(petState==='flee'){ const away=new THREE.Vector3().subVectors(pPos, playerPos).normalize().multiplyScalar(6); target=new THREE.Vector3().addVectors(pPos, away); speed=5.4; }
+  else if(petState==='chase'){ target=playerPos.clone(); speed=5.2; }
+  else { target=new THREE.Vector3().copy(patrolTarget); speed=2.2; if(pPos.distanceTo(patrolTarget)<1.2) patrolTarget.set((Math.random()-0.5)*54,0,(Math.random()-0.5)*54); }
   if(target){ const moved=tryMoveEntity(pPos, target, speed, dt); if(moved){ const ang=Math.atan2(target.x - pPos.x, target.z - pPos.z); pet.rotation.y = ang; } }
   if(spiderMixer) spiderMixer.update(dt);
   if(spiderMesh){
@@ -700,10 +700,10 @@ function updatePet(dt, now){
     spiderMesh.rotation.z = Math.sin(now*s)*0.10;
   }
   const hDistPet = Math.hypot(pPos.x - playerPos.x, pPos.z - playerPos.z);
-  if(hDistPet<1.05 && !gameEnded) endGame(false);
+  if(hDistPet<1.05 && !gameEnded) endGame(false, false);
 }
 function checkWin(){
-  if(collected>=60 && controls.getObject().position.distanceTo(doorFrame.position)<2.8) endGame(true);
+  if(collected>=60 && controls.getObject().position.distanceTo(doorFrame.position)<2.8) endGame(true, false);
   else if(collected<60 && controls.getObject().position.distanceTo(doorFrame.position)<2.4){ doorFrame.material.emissiveIntensity=1.6; setTimeout(()=> doorFrame.material.emissiveIntensity=0.8,180); }
 }
 let spiderAlertShown=false;
@@ -713,13 +713,41 @@ function showSpiderAlert(){
   spiderAlert.classList.remove('hidden');
   setTimeout(()=> spiderAlert.classList.add('hidden'), 5000);
 }
-function endGame(won){
+function endGame(won, isJoker=false){
+  // joker jumpscare - sadece joker yakalarsa
+  if(!won && isJoker){
+    gameEnded=true; try{ controls.unlock(); }catch(e){}
+    overlay.style.display='none'; mobileControls.classList.add('hidden');
+    bgm.pause(); bgmOpening.pause();
+    if(jumpscare){
+      jumpscare.src='assets/jumpscare.mp4';
+      jumpscare.classList.remove('hidden');
+      jumpscare.currentTime=0; jumpscare.volume=0.9; jumpscare.muted=false;
+      jumpscare.play().catch(()=>{});
+      setTimeout(()=>{
+        jumpscare.pause(); jumpscare.classList.add('hidden');
+        // simdi kaybetme ekrani + bebek cigligi
+        gameOverEl.classList.remove('hidden'); gameOverEl.classList.add('lose'); gameOverEl.classList.remove('win');
+        loseBgm.muted=false; loseBgm.volume=0.85; loseBgm.currentTime=0; loseBgm.play().catch(()=>{});
+        const goIcon=document.getElementById('goIcon'), goSub=document.getElementById('goSub'), goStat1=document.getElementById('goStat1'), goStat2=document.getElementById('goStat2');
+        const elapsed = gameStartTime ? Math.floor((performance.now()-gameStartTime)/1000) : 0;
+        const mins=String(Math.floor(elapsed/60)).padStart(2,'0'), secs=String(elapsed%60).padStart(2,'0');
+        if(goStat1) goStat1.textContent=`🔋 ${collected}/60 pil`;
+        if(goStat2) goStat2.textContent=`⏱️ ${mins}:${secs} • 🔋 ${battery.toFixed(0)}%`;
+        if(goIcon) goIcon.textContent='☠️';
+        goTitle.textContent='YAKALANDIN';
+        if(goSub) goSub.textContent='Jester üzerine atladı!';
+        goDesc.textContent='Joker jumpscare! Kaçamadıın...';
+      }, 2400);
+    }
+    return;
+  }
   gameEnded=true; try{ controls.unlock(); }catch(e){}
   gameOverEl.classList.remove('hidden'); gameOverEl.classList.toggle('win', won); gameOverEl.classList.toggle('lose', !won);
   overlay.style.display='none'; bgm.pause(); bgmOpening.pause(); mobileControls.classList.add('hidden');
   if(!won){
     loseBgm.muted=false; loseBgm.volume=0.85; loseBgm.currentTime=0;
-    const p=loseBgm.play(); if(p) p.catch(()=>{ // autoplay engellenirse kullanici tikinda cal
+    const p=loseBgm.play(); if(p) p.catch(()=>{
       const once=()=>{ loseBgm.play().catch(()=>{}); document.removeEventListener('click', once); };
       document.addEventListener('click', once, {once:true});
     });
